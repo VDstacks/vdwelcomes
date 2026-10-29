@@ -1,0 +1,784 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f3f5f4">
+  <title>Arc — Scientific Calculator</title>
+  <style>
+    :root {
+      --page: #f3f5f4;
+      --surface: #fff;
+      --ink: #202823;
+      --muted: #828b85;
+      --accent: #226c55;
+      --line: #e6ebe7;
+      --font: "Trebuchet MS", Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--page);
+      color: var(--ink);
+      font-family: var(--font);
+      transition: background .2s, color .2s;
+    }
+
+    button, input, select { font: inherit; }
+    button { color: inherit; cursor: pointer; }
+
+    .topbar, main, footer {
+      width: min(1080px, calc(100% - 36px));
+      margin: auto;
+    }
+
+    .topbar {
+      height: 68px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .brand {
+      font-size: 19px;
+      font-weight: 800;
+      letter-spacing: -1px;
+    }
+
+    .status, .muted { color: var(--muted); font-size: 12px; }
+
+    .reset {
+      margin-left: 10px;
+      border: 1px solid var(--line);
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      background: var(--surface);
+      color: var(--muted);
+    }
+
+    .hero { padding: 56px 0 34px; }
+    .eyebrow {
+      color: var(--accent);
+      font-size: 10px;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 14px 0;
+      font-size: clamp(48px, 8vw, 76px);
+      line-height: .98;
+      letter-spacing: -4px;
+      font-weight: 600;
+    }
+
+    h1 em, .tips-title em {
+      color: var(--accent);
+      font-family: Georgia, serif;
+      font-weight: 400;
+    }
+
+    .hero p:last-child { color: var(--muted); font-size: 14px; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.45fr) minmax(260px, .8fr);
+      gap: 16px;
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      box-shadow: 0 8px 26px #15251a09;
+    }
+
+    .calculator { padding: 20px; }
+
+    .calc-head, .heading, .display-meta, .setting {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .calc-head { color: var(--accent); font-size: 10px; letter-spacing: 1px; }
+
+    .mode {
+      display: flex;
+      padding: 3px;
+      border-radius: 5px;
+      background: var(--page);
+    }
+
+    .mode button {
+      border: 0;
+      background: transparent;
+      border-radius: 4px;
+      padding: 6px 10px;
+      color: var(--muted);
+      font-size: 10px;
+    }
+
+    .mode button.active { background: var(--surface); color: var(--accent); }
+
+    .display {
+      min-height: 118px;
+      margin: 16px 0 10px;
+      padding: 12px 15px;
+      background: color-mix(in srgb, var(--page) 72%, var(--surface));
+      border-radius: 7px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      text-align: right;
+    }
+
+    .display-meta, .expression, .result, .keys button, .memory button {
+      font-family: Consolas, "Courier New", monospace;
+    }
+
+    .display-meta, .expression { color: var(--muted); font-size: 11px; }
+    .result { font-size: clamp(28px, 5vw, 38px); overflow-wrap: anywhere; }
+    #error { min-height: 16px; color: #b33c3c; font-size: 11px; }
+
+    .memory {
+      display: flex;
+      justify-content: space-between;
+      margin: 10px 0;
+    }
+
+    .memory button {
+      padding: 5px 2px;
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      font-size: 10px;
+    }
+
+    .keys {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 7px;
+    }
+
+    .keys button {
+      min-height: 40px;
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      background: var(--surface);
+      font-size: 14px;
+    }
+
+    .keys button:hover { border-color: var(--accent); }
+    .keys .fn { color: var(--accent); font-size: 11px; }
+    .keys .op { color: var(--accent); }
+    .keys .clear { color: #a65f4d; }
+    .keys .equals { color: white; background: var(--accent); border-color: var(--accent); }
+
+    .hint {
+      margin: 12px 0 0;
+      text-align: center;
+      color: var(--muted);
+      font-size: 10px;
+    }
+
+    .side { display: grid; gap: 16px; align-content: start; }
+    .side .panel { padding: 18px; }
+    .heading { margin-bottom: 14px; }
+    .heading h2 { margin: 4px 0 0; font-size: 18px; }
+    .small { color: var(--muted); font-size: 9px; letter-spacing: 1px; }
+
+    .text-button {
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .history { min-height: 100px; }
+    .empty {
+      padding: 20px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .history-item {
+      display: flex;
+      width: 100%;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 0;
+      border: 0;
+      border-top: 1px solid var(--line);
+      background: transparent;
+      text-align: left;
+      font: 11px Consolas, monospace;
+    }
+
+    .history-item span { color: var(--muted); overflow: hidden; text-overflow: ellipsis; }
+    .history-item b { white-space: nowrap; color: var(--accent); }
+
+    .setting {
+      padding: 9px 0;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    input[type="color"] {
+      width: 42px;
+      height: 24px;
+      padding: 2px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: var(--surface);
+    }
+
+    select {
+      max-width: 130px;
+      padding: 5px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: var(--surface);
+      color: var(--ink);
+      font-size: 11px;
+    }
+
+    .presets { display: flex; gap: 8px; margin-top: 12px; }
+    .preset {
+      width: 42px;
+      height: 23px;
+      border: 1px solid #0002;
+      border-radius: 4px;
+    }
+
+    .paper { background: linear-gradient(90deg,#f3f5f4 50%,#226c55 50%); }
+    .night { background: linear-gradient(90deg,#141a19 50%,#74d2a9 50%); }
+    .citrus { background: linear-gradient(90deg,#f7f4dc 50%,#7e8a28 50%); }
+    .rose { background: linear-gradient(90deg,#f6eeee 50%,#a54d65 50%); }
+
+    .tips { padding: 82px 0 30px; }
+    .tips-title { font-size: 38px; line-height: 1.05; letter-spacing: -1px; }
+    .tip-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 11px; }
+    .tip {
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+    }
+
+    .tip h3 { margin: 13px 0 8px; font-size: 13px; }
+    .tip p { color: var(--muted); font-size: 11px; line-height: 1.7; }
+    .tip code { color: var(--accent); font-size: 10px; }
+
+    .learn {
+      margin: 32px 0 56px;
+      padding: 25px;
+      border-radius: 8px;
+      background: color-mix(in srgb, var(--accent) 9%, var(--surface));
+    }
+
+    .learn h2 { margin: 7px 0 0; }
+    .learn strong { color: var(--accent); }
+
+    footer {
+      padding: 20px 0;
+      border-top: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    button:focus-visible, input:focus-visible, select:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    @media (max-width: 760px) {
+      .layout { grid-template-columns: 1fr; }
+      .side { grid-template-columns: 1fr 1fr; }
+      .tip-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 520px) {
+      .side { grid-template-columns: 1fr; }
+      .keys { gap: 5px; }
+      .keys button { min-height: 42px; }
+      .tip-grid { gap: 8px; }
+      .tip { padding: 12px; }
+      footer { flex-wrap: wrap; gap: 10px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">∿ arc <span class="muted">/ calculator</span></div>
+    <div><span class="status">● Ready when you are</span>
+      <button class="reset" id="reset" title="Reset appearance" aria-label="Reset appearance">↺</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="eyebrow">01 / YOUR EVERYDAY SCIENCE DESK</div>
+      <h1>Make room<br>for <em>what if.</em></h1>
+      <p>From quick sums to curious detours. A little more power for every problem.</p>
+    </section>
+
+    <section class="layout" aria-label="Scientific calculator">
+      <article class="calculator panel">
+        <div class="calc-head">
+          <strong>✳ &nbsp; SCIENTIFIC</strong>
+          <div class="mode">
+            <button id="deg" class="active" aria-pressed="true">DEG</button>
+            <button id="rad" aria-pressed="false">RAD</button>
+          </div>
+        </div>
+
+        <div class="display">
+          <div class="display-meta"><span id="memoryMark">M ·</span><span id="modeLabel">DEG</span></div>
+          <div id="expression" class="expression" aria-live="polite"></div>
+          <div id="result" class="result" aria-live="polite">0</div>
+          <div id="error" role="alert"></div>
+        </div>
+
+        <div class="memory">
+          <button data-action="mc">MC</button><button data-action="mr">MR</button>
+          <button data-action="mplus">M+</button><button data-action="mminus">M−</button>
+          <button data-action="ans">Ans</button><button id="goHistory">History ↗</button>
+        </div>
+
+        <div class="keys" id="keys">
+          <button class="fn" data-insert="sin(">sin</button>
+          <button class="fn" data-insert="cos(">cos</button>
+          <button class="fn" data-insert="tan(">tan</button>
+          <button class="fn" data-insert="asin(">sin⁻¹</button>
+          <button class="fn" data-insert="acos(">cos⁻¹</button>
+          <button class="fn" data-insert="atan(">tan⁻¹</button>
+          <button class="fn" data-insert="sqrt(">√</button>
+          <button class="fn" data-insert="cbrt(">∛</button>
+          <button class="fn" data-insert="ln(">ln</button>
+          <button class="fn" data-insert="log(">log</button>
+          <button class="fn" data-insert="!">n!</button>
+          <button class="fn" data-insert="^">xʸ</button>
+          <button class="fn" data-insert="π">π</button>
+          <button class="fn" data-insert="e">e</button>
+          <button class="fn" data-insert="(">(</button>
+          <button class="fn" data-insert=")">)</button>
+          <button class="fn" data-insert="%">%</button>
+          <button class="fn" data-action="back">⌫</button>
+          <button data-insert="7">7</button><button data-insert="8">8</button>
+          <button data-insert="9">9</button><button class="op" data-insert="÷">÷</button>
+          <button data-insert="4">4</button><button data-insert="5">5</button>
+          <button data-insert="6">6</button><button class="op" data-insert="×">×</button>
+          <button data-insert="1">1</button><button data-insert="2">2</button>
+          <button data-insert="3">3</button><button class="op" data-insert="−">−</button>
+          <button class="clear" data-action="clear">AC</button><button data-insert="0">0</button>
+          <button data-insert=".">.</button><button class="op" data-insert="+">+</button>
+          <button class="op" data-insert="Ans">Ans</button>
+          <button class="equals" data-action="calculate">=</button>
+        </div>
+        <p class="hint">Enter calculates · Esc clears · Backspace edits</p>
+      </article>
+
+      <aside class="side">
+        <section class="panel" id="historyPanel">
+          <div class="heading">
+            <div><div class="small">YOUR SCRATCHPAD</div><h2>Recent work</h2></div>
+            <button class="text-button" id="clearHistory">Clear</button>
+          </div>
+          <div id="history" class="history"><div class="empty">Your calculations<br>will land here.</div></div>
+        </section>
+
+        <section class="panel">
+          <div class="heading">
+            <div><div class="small">MAKE IT YOURS</div><h2>Appearance</h2></div>
+            <span>✳</span>
+          </div>
+          <label class="setting">Background <input type="color" data-theme="--page" value="#f3f5f4"></label>
+          <label class="setting">Calculator <input type="color" data-theme="--surface" value="#ffffff"></label>
+          <label class="setting">Accent <input type="color" data-theme="--accent" value="#226c55"></label>
+          <label class="setting">Text <input type="color" data-theme="--ink" value="#202823"></label>
+          <label class="setting">Font
+            <select id="font">
+              <option value="Trebuchet MS">Trebuchet</option>
+              <option value="Arial">Arial</option>
+              <option value="Georgia">Georgia</option>
+              <option value="Verdana">Verdana</option>
+              <option value="Consolas">Consolas</option>
+            </select>
+          </label>
+          <div class="small">QUICK PALETTES</div>
+          <div class="presets">
+            <button class="preset paper" data-preset="paper" aria-label="Paper colors"></button>
+            <button class="preset night" data-preset="night" aria-label="Night colors"></button>
+            <button class="preset citrus" data-preset="citrus" aria-label="Citrus colors"></button>
+            <button class="preset rose" data-preset="rose" aria-label="Rose colors"></button>
+          </div>
+        </section>
+      </aside>
+    </section>
+
+    <section class="tips">
+      <div class="eyebrow">02 / A FEW SHORTCUTS</div>
+      <h2 class="tips-title">Little tricks.<br><em>Big brain energy.</em></h2>
+      <div class="tip-grid">
+        <article class="tip"><div class="small">01 / SPEED</div><h3>Use your keyboard</h3><p>Type an expression and press Enter. Backspace edits; Escape clears the display.</p><code>(24 + 6) × 3</code></article>
+        <article class="tip"><div class="small">02 / ANGLES</div><h3>Check angle mode</h3><p>Use DEG for everyday angles and RAD for radians. Check the mode before trig calculations.</p><code>sin(30) = 0.5 in DEG</code></article>
+        <article class="tip"><div class="small">03 / PERCENT</div><h3>Find a share</h3><p>Percent turns a number into hundredths. Multiply it by an amount to find a discount or share.</p><code>240 × 15% = 36</code></article>
+        <article class="tip"><div class="small">04 / REUSE</div><h3>Keep your result</h3><p>Tap a recent calculation to load it again. Use Ans for your last answer or M+ to store a value.</p><code>Ans × 2</code></article>
+      </div>
+    </section>
+
+    <section class="learn">
+      <div class="eyebrow">KEEP ASKING GOOD QUESTIONS</div>
+      <h2>Learn with <strong>JUST_Hmm more....</strong></h2>
+    </section>
+  </main>
+
+  <footer><strong>∿ arc</strong><span>Made for curious minds. Keep exploring.</span></footer>
+
+  <script>
+    (() => {
+      "use strict";
+      const $ = selector => document.querySelector(selector);
+      const expressionEl = $("#expression");
+      const resultEl = $("#result");
+      const errorEl = $("#error");
+      let expression = "";
+      let answer = 0;
+      let memory = 0;
+      let angle = "DEG";
+      let justCalculated = false;
+
+      const palettes = {
+        paper: ["#f3f5f4", "#ffffff", "#226c55", "#202823"],
+        night: ["#141a19", "#202927", "#74d2a9", "#edf4ef"],
+        citrus: ["#f7f4dc", "#fffdf4", "#7e8a28", "#292d18"],
+        rose: ["#f6eeee", "#fffafa", "#a54d65", "#34252a"]
+      };
+      const themeInputs = [...document.querySelectorAll("[data-theme]")];
+
+      function showError(message) { errorEl.textContent = message; }
+      function format(value) {
+        if (!Number.isFinite(value)) throw new Error("Result is outside the supported range.");
+        if (Math.abs(value) < 1e-13) return "0";
+        return Number(value.toPrecision(12)).toString();
+      }
+
+      function tokenize(source) {
+        source = source.replaceAll("×", "*").replaceAll("÷", "/").replaceAll("−", "-");
+        const pattern = /\s*([0-9]+(?:\.[0-9]*)?(?:e[+-]?[0-9]+)?|\.[0-9]+(?:e[+-]?[0-9]+)?|[A-Za-z]+|π|[()+\-*/^!%])/igy;
+        const tokens = [];
+        let position = 0;
+
+        while (position < source.length) {
+          pattern.lastIndex = position;
+          const match = pattern.exec(source);
+          if (!match) throw new Error("Check the expression near “" + source.slice(position, position + 8) + "”.");
+          tokens.push(match[1]);
+          position = pattern.lastIndex;
+        }
+
+        const endsValue = token =>
+          /^\d/.test(token) || [")", "π", "e", "Ans", "!"].includes(token) || token === "%";
+        const startsValue = token =>
+          /^\d/.test(token) || ["(", "π", "e", "Ans"].includes(token) ||
+          /^(sin|cos|tan|asin|acos|atan|ln|log|sqrt|cbrt)$/i.test(token);
+
+        const result = [];
+        for (const token of tokens) {
+          if (result.length && endsValue(result[result.length - 1]) && startsValue(token)) result.push("*");
+          result.push(token);
+        }
+        return result;
+      }
+
+      function evaluate(source) {
+        const tokens = tokenize(source);
+        let index = 0;
+        const peek = () => tokens[index];
+        const take = () => tokens[index++];
+        const expect = token => {
+          if (take() !== token) throw new Error("Check your parentheses and operators.");
+        };
+
+        function additive() {
+          let value = multiply();
+          while (peek() === "+" || peek() === "-") {
+            const op = take(), right = multiply();
+            value = op === "+" ? value + right : value - right;
+          }
+          return value;
+        }
+
+        function multiply() {
+          let value = unary();
+          while (peek() === "*" || peek() === "/") {
+            const op = take(), right = unary();
+            if (op === "/" && right === 0) throw new Error("Cannot divide by zero.");
+            value = op === "*" ? value * right : value / right;
+          }
+          return value;
+        }
+
+        function unary() {
+          if (peek() === "+") { take(); return unary(); }
+          if (peek() === "-") { take(); return -unary(); }
+          return power();
+        }
+
+        function power() {
+          let value = postfix();
+          if (peek() === "^") { take(); value = Math.pow(value, unary()); }
+          return value;
+        }
+
+        function postfix() {
+          let value = primary();
+          while (peek() === "!" || peek() === "%") {
+            const op = take();
+            if (op === "!") {
+              if (value < 0 || value > 170 || !Number.isInteger(value))
+                throw new Error("Factorial needs a whole number from 0 to 170.");
+              let factorial = 1;
+              for (let n = 2; n <= value; n++) factorial *= n;
+              value = factorial;
+            } else value /= 100;
+          }
+          return value;
+        }
+
+        function primary() {
+          const token = take();
+          if (token === undefined) throw new Error("Enter a calculation first.");
+          if (token === "(") { const value = additive(); expect(")"); return value; }
+          if (/^\d/.test(token) || /^\.\d/.test(token)) return Number(token);
+          if (token === "π") return Math.PI;
+          if (token.toLowerCase() === "e") return Math.E;
+          if (token.toLowerCase() === "ans") return answer;
+
+          const fn = token.toLowerCase();
+          if (/^(sin|cos|tan|asin|acos|atan|ln|log|sqrt|cbrt)$/.test(fn)) {
+            let value;
+            if (peek() === "(") { take(); value = additive(); expect(")"); }
+            else value = primary();
+
+            const toRadians = n => angle === "DEG" ? n * Math.PI / 180 : n;
+            const fromRadians = n => angle === "DEG" ? n * 180 / Math.PI : n;
+
+            switch (fn) {
+              case "sin": return Math.sin(toRadians(value));
+              case "cos": return Math.cos(toRadians(value));
+              case "tan":
+                if (Math.abs(Math.cos(toRadians(value))) < 1e-14)
+                  throw new Error("Tangent is undefined at this angle.");
+                return Math.tan(toRadians(value));
+              case "asin":
+                if (Math.abs(value) > 1) throw new Error("Inverse sine needs a value from −1 to 1.");
+                return fromRadians(Math.asin(value));
+              case "acos":
+                if (Math.abs(value) > 1) throw new Error("Inverse cosine needs a value from −1 to 1.");
+                return fromRadians(Math.acos(value));
+              case "atan": return fromRadians(Math.atan(value));
+              case "ln":
+                if (value <= 0) throw new Error("Natural log needs a positive value.");
+                return Math.log(value);
+              case "log":
+                if (value <= 0) throw new Error("Log needs a positive value.");
+                return Math.log10(value);
+              case "sqrt":
+                if (value < 0) throw new Error("Square root needs a non-negative value.");
+                return Math.sqrt(value);
+              case "cbrt": return Math.cbrt(value);
+            }
+          }
+          throw new Error("Unexpected “" + token + "”. Check the expression.");
+        }
+
+        const value = additive();
+        if (index < tokens.length) throw new Error("Check the expression near “" + tokens[index] + "”.");
+        if (!Number.isFinite(value)) throw new Error("Result is outside the supported range.");
+        return value;
+      }
+
+      function render() {
+        expressionEl.textContent = expression;
+        resultEl.textContent = format(answer);
+        $("#modeLabel").textContent = angle;
+        $("#memoryMark").textContent = memory ? "M" : "M ·";
+        $("#deg").classList.toggle("active", angle === "DEG");
+        $("#rad").classList.toggle("active", angle === "RAD");
+        $("#deg").setAttribute("aria-pressed", angle === "DEG");
+        $("#rad").setAttribute("aria-pressed", angle === "RAD");
+      }
+
+      function insert(value) {
+        showError("");
+        if (justCalculated && !["+", "-", "−", "*", "×", "/", "÷", "^", "!", "%"].includes(value))
+          expression = "";
+        justCalculated = false;
+        expression += value;
+        expressionEl.textContent = expression;
+      }
+
+      let history = [];
+      try { history = JSON.parse(localStorage.getItem("arc-history") || "[]"); } catch {}
+
+      function renderHistory() {
+        const area = $("#history");
+        if (!history.length) {
+          area.innerHTML = '<div class="empty">Your calculations<br>will land here.</div>';
+          return;
+        }
+        area.innerHTML = history.map((item, i) =>
+          '<button class="history-item" data-history="' + i + '"><span>' +
+          escapeHtml(item.expression) + '</span><b>' + escapeHtml(item.result) + ' ↗</b></button>'
+        ).join("");
+      }
+
+      function escapeHtml(text) {
+        return text.replace(/[&<>"']/g, char =>
+          ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]
+        );
+      }
+
+      function calculate() {
+        if (!expression.trim()) return;
+        try {
+          const original = expression;
+          answer = evaluate(original);
+          resultEl.textContent = format(answer);
+          expressionEl.textContent = original;
+          showError("");
+          history.unshift({ expression: original, result: format(answer) });
+          history = history.slice(0, 8);
+          localStorage.setItem("arc-history", JSON.stringify(history));
+          renderHistory();
+          expression = format(answer);
+          justCalculated = true;
+        } catch (error) {
+          showError(error.message);
+        }
+      }
+
+      $("#keys").addEventListener("click", event => {
+        const button = event.target.closest("button");
+        if (!button) return;
+        if (button.dataset.insert !== undefined) { insert(button.dataset.insert); return; }
+
+        switch (button.dataset.action) {
+          case "calculate": calculate(); break;
+          case "clear":
+            expression = ""; answer = 0; justCalculated = false;
+            expressionEl.textContent = ""; resultEl.textContent = "0"; showError("");
+            break;
+          case "back":
+            expression = expression.slice(0, -1); justCalculated = false; render();
+            break;
+        }
+      });
+
+      document.querySelector(".memory").addEventListener("click", event => {
+        const action = event.target.dataset.action;
+        if (!action) return;
+
+        if (action === "ans") insert("Ans");
+        if (action === "mc") { memory = 0; render(); }
+        if (action === "mr") insert(format(memory));
+        if (action === "mplus" || action === "mminus") {
+          try {
+            const value = expression ? evaluate(expression) : answer;
+            memory += action === "mplus" ? value : -value;
+            render();
+          } catch (error) { showError(error.message); }
+        }
+      });
+
+      $("#goHistory").onclick = () => $("#historyPanel").scrollIntoView({ behavior: "smooth" });
+      $("#history").addEventListener("click", event => {
+        const button = event.target.closest("[data-history]");
+        if (!button) return;
+        expression = history[Number(button.dataset.history)].expression;
+        justCalculated = false;
+        showError("");
+        render();
+      });
+
+      $("#clearHistory").onclick = () => {
+        history = [];
+        localStorage.removeItem("arc-history");
+        renderHistory();
+      };
+
+      $("#deg").onclick = () => { angle = "DEG"; render(); };
+      $("#rad").onclick = () => { angle = "RAD"; render(); };
+
+      document.addEventListener("keydown", event => {
+        if (event.ctrlKey || event.metaKey || event.altKey) return;
+        if (event.key === "Enter" || event.key === "=") { event.preventDefault(); calculate(); }
+        else if (event.key === "Escape") {
+          expression = ""; answer = 0; justCalculated = false;
+          expressionEl.textContent = ""; resultEl.textContent = "0"; showError("");
+        } else if (event.key === "Backspace") {
+          expression = expression.slice(0, -1); justCalculated = false; render();
+        } else if (/^[0-9.+\-*/^()%!]$/.test(event.key) || event.key === "(" || event.key === ")") {
+          insert(event.key);
+        } else if (/^[a-zA-Z]$/.test(event.key)) {
+          insert(event.key);
+        }
+      });
+
+      themeInputs.forEach(input => {
+        const saved = localStorage.getItem("arc-" + input.dataset.theme);
+        if (saved) input.value = saved;
+        document.documentElement.style.setProperty(input.dataset.theme, input.value);
+        input.addEventListener("input", () => {
+          document.documentElement.style.setProperty(input.dataset.theme, input.value);
+          localStorage.setItem("arc-" + input.dataset.theme, input.value);
+        });
+      });
+
+      const fontSelect = $("#font");
+      fontSelect.value = localStorage.getItem("arc-font") || "Trebuchet MS";
+      document.documentElement.style.setProperty("--font", fontSelect.value);
+      fontSelect.onchange = () => {
+        document.documentElement.style.setProperty("--font", fontSelect.value);
+        localStorage.setItem("arc-font", fontSelect.value);
+      };
+
+      document.querySelectorAll("[data-preset]").forEach(button => {
+        button.onclick = () => {
+          const values = palettes[button.dataset.preset];
+          themeInputs.forEach((input, i) => {
+            input.value = values[i];
+            input.dispatchEvent(new Event("input"));
+          });
+        };
+      });
+
+      $("#reset").onclick = () => {
+        themeInputs.forEach(input => localStorage.removeItem("arc-" + input.dataset.theme));
+        fontSelect.value = "Trebuchet MS";
+        localStorage.removeItem("arc-font");
+        fontSelect.dispatchEvent(new Event("change"));
+        const defaults = palettes.paper;
+        themeInputs.forEach((input, i) => {
+          input.value = defaults[i];
+          input.dispatchEvent(new Event("input"));
+        });
+      };
+
+      render();
+      renderHistory();
+    })();
+  </script>
+</body>
+</html>
