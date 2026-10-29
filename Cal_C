@@ -1,784 +1,491 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f3f5f4">
-  <title>Arc — Scientific Calculator</title>
-  <style>
-    :root {
-      --page: #f3f5f4;
-      --surface: #fff;
-      --ink: #202823;
-      --muted: #828b85;
-      --accent: #226c55;
-      --line: #e6ebe7;
-      --font: "Trebuchet MS", Arial, sans-serif;
-    }
-
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      background: var(--page);
-      color: var(--ink);
-      font-family: var(--font);
-      transition: background .2s, color .2s;
-    }
-
-    button, input, select { font: inherit; }
-    button { color: inherit; cursor: pointer; }
-
-    .topbar, main, footer {
-      width: min(1080px, calc(100% - 36px));
-      margin: auto;
-    }
-
-    .topbar {
-      height: 68px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid var(--line);
-    }
-
-    .brand {
-      font-size: 19px;
-      font-weight: 800;
-      letter-spacing: -1px;
-    }
-
-    .status, .muted { color: var(--muted); font-size: 12px; }
-
-    .reset {
-      margin-left: 10px;
-      border: 1px solid var(--line);
-      border-radius: 50%;
-      width: 28px;
-      height: 28px;
-      background: var(--surface);
-      color: var(--muted);
-    }
-
-    .hero { padding: 56px 0 34px; }
-    .eyebrow {
-      color: var(--accent);
-      font-size: 10px;
-      letter-spacing: 1.2px;
-      text-transform: uppercase;
-    }
-
-    h1 {
-      margin: 14px 0;
-      font-size: clamp(48px, 8vw, 76px);
-      line-height: .98;
-      letter-spacing: -4px;
-      font-weight: 600;
-    }
-
-    h1 em, .tips-title em {
-      color: var(--accent);
-      font-family: Georgia, serif;
-      font-weight: 400;
-    }
-
-    .hero p:last-child { color: var(--muted); font-size: 14px; }
-
-    .layout {
-      display: grid;
-      grid-template-columns: minmax(0, 1.45fr) minmax(260px, .8fr);
-      gap: 16px;
-    }
-
-    .panel {
-      background: var(--surface);
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      box-shadow: 0 8px 26px #15251a09;
-    }
-
-    .calculator { padding: 20px; }
-
-    .calc-head, .heading, .display-meta, .setting {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .calc-head { color: var(--accent); font-size: 10px; letter-spacing: 1px; }
-
-    .mode {
-      display: flex;
-      padding: 3px;
-      border-radius: 5px;
-      background: var(--page);
-    }
-
-    .mode button {
-      border: 0;
-      background: transparent;
-      border-radius: 4px;
-      padding: 6px 10px;
-      color: var(--muted);
-      font-size: 10px;
-    }
-
-    .mode button.active { background: var(--surface); color: var(--accent); }
-
-    .display {
-      min-height: 118px;
-      margin: 16px 0 10px;
-      padding: 12px 15px;
-      background: color-mix(in srgb, var(--page) 72%, var(--surface));
-      border-radius: 7px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      text-align: right;
-    }
-
-    .display-meta, .expression, .result, .keys button, .memory button {
-      font-family: Consolas, "Courier New", monospace;
-    }
-
-    .display-meta, .expression { color: var(--muted); font-size: 11px; }
-    .result { font-size: clamp(28px, 5vw, 38px); overflow-wrap: anywhere; }
-    #error { min-height: 16px; color: #b33c3c; font-size: 11px; }
-
-    .memory {
-      display: flex;
-      justify-content: space-between;
-      margin: 10px 0;
-    }
-
-    .memory button {
-      padding: 5px 2px;
-      border: 0;
-      background: transparent;
-      color: var(--muted);
-      font-size: 10px;
-    }
-
-    .keys {
-      display: grid;
-      grid-template-columns: repeat(6, minmax(0, 1fr));
-      gap: 7px;
-    }
-
-    .keys button {
-      min-height: 40px;
-      border: 1px solid var(--line);
-      border-radius: 5px;
-      background: var(--surface);
-      font-size: 14px;
-    }
-
-    .keys button:hover { border-color: var(--accent); }
-    .keys .fn { color: var(--accent); font-size: 11px; }
-    .keys .op { color: var(--accent); }
-    .keys .clear { color: #a65f4d; }
-    .keys .equals { color: white; background: var(--accent); border-color: var(--accent); }
-
-    .hint {
-      margin: 12px 0 0;
-      text-align: center;
-      color: var(--muted);
-      font-size: 10px;
-    }
-
-    .side { display: grid; gap: 16px; align-content: start; }
-    .side .panel { padding: 18px; }
-    .heading { margin-bottom: 14px; }
-    .heading h2 { margin: 4px 0 0; font-size: 18px; }
-    .small { color: var(--muted); font-size: 9px; letter-spacing: 1px; }
-
-    .text-button {
-      border: 0;
-      background: transparent;
-      color: var(--muted);
-      font-size: 11px;
-    }
-
-    .history { min-height: 100px; }
-    .empty {
-      padding: 20px;
-      text-align: center;
-      color: var(--muted);
-      font-size: 12px;
-      line-height: 1.6;
-    }
-
-    .history-item {
-      display: flex;
-      width: 100%;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 10px 0;
-      border: 0;
-      border-top: 1px solid var(--line);
-      background: transparent;
-      text-align: left;
-      font: 11px Consolas, monospace;
-    }
-
-    .history-item span { color: var(--muted); overflow: hidden; text-overflow: ellipsis; }
-    .history-item b { white-space: nowrap; color: var(--accent); }
-
-    .setting {
-      padding: 9px 0;
-      border-top: 1px solid var(--line);
-      color: var(--muted);
-      font-size: 11px;
-    }
-
-    input[type="color"] {
-      width: 42px;
-      height: 24px;
-      padding: 2px;
-      border: 1px solid var(--line);
-      border-radius: 4px;
-      background: var(--surface);
-    }
-
-    select {
-      max-width: 130px;
-      padding: 5px;
-      border: 1px solid var(--line);
-      border-radius: 4px;
-      background: var(--surface);
-      color: var(--ink);
-      font-size: 11px;
-    }
-
-    .presets { display: flex; gap: 8px; margin-top: 12px; }
-    .preset {
-      width: 42px;
-      height: 23px;
-      border: 1px solid #0002;
-      border-radius: 4px;
-    }
-
-    .paper { background: linear-gradient(90deg,#f3f5f4 50%,#226c55 50%); }
-    .night { background: linear-gradient(90deg,#141a19 50%,#74d2a9 50%); }
-    .citrus { background: linear-gradient(90deg,#f7f4dc 50%,#7e8a28 50%); }
-    .rose { background: linear-gradient(90deg,#f6eeee 50%,#a54d65 50%); }
-
-    .tips { padding: 82px 0 30px; }
-    .tips-title { font-size: 38px; line-height: 1.05; letter-spacing: -1px; }
-    .tip-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 11px; }
-    .tip {
-      padding: 16px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: var(--surface);
-    }
-
-    .tip h3 { margin: 13px 0 8px; font-size: 13px; }
-    .tip p { color: var(--muted); font-size: 11px; line-height: 1.7; }
-    .tip code { color: var(--accent); font-size: 10px; }
-
-    .learn {
-      margin: 32px 0 56px;
-      padding: 25px;
-      border-radius: 8px;
-      background: color-mix(in srgb, var(--accent) 9%, var(--surface));
-    }
-
-    .learn h2 { margin: 7px 0 0; }
-    .learn strong { color: var(--accent); }
-
-    footer {
-      padding: 20px 0;
-      border-top: 1px solid var(--line);
-      display: flex;
-      justify-content: space-between;
-      color: var(--muted);
-      font-size: 11px;
-    }
-
-    button:focus-visible, input:focus-visible, select:focus-visible {
-      outline: 2px solid var(--accent);
-      outline-offset: 2px;
-    }
-
-    @media (max-width: 760px) {
-      .layout { grid-template-columns: 1fr; }
-      .side { grid-template-columns: 1fr 1fr; }
-      .tip-grid { grid-template-columns: repeat(2, 1fr); }
-    }
-
-    @media (max-width: 520px) {
-      .side { grid-template-columns: 1fr; }
-      .keys { gap: 5px; }
-      .keys button { min-height: 42px; }
-      .tip-grid { gap: 8px; }
-      .tip { padding: 12px; }
-      footer { flex-wrap: wrap; gap: 10px; }
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Arc — Scientific Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--page:#07090e;--surface:#121826;--ink:#f3f6ff;--muted:#bdc6d8;--accent:#8aa7ff;--line:rgba(226,235,255,.17);--font:"Plus Jakarta Sans",sans-serif}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;min-height:100vh;overflow-x:hidden;background-color:var(--page);background-image:radial-gradient(ellipse at 50% -10%,rgba(72,94,174,.22),transparent 55%),linear-gradient(rgba(180,200,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(180,200,255,.025) 1px,transparent 1px);background-size:auto,42px 42px,42px 42px;color:var(--ink);font-family:var(--font);transition:background-color .2s,color .2s}
+button,input,select{font:inherit}
+button{color:inherit;cursor:pointer}
+#glow{position:fixed;z-index:0;left:50%;top:30%;width:430px;height:430px;transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;background:radial-gradient(circle,rgba(105,130,255,.16),transparent 70%);filter:blur(14px)}
+header,main,footer{position:relative;z-index:1;width:min(1080px,calc(100% - 36px));margin:auto}
+header{height:68px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);font-size:12px}
+.brand{font-size:19px;font-weight:800;letter-spacing:-1px}
+.brand span,.status{color:var(--muted);font-size:11px;font-weight:400;letter-spacing:0}
+#reset{margin-left:10px;width:28px;height:28px;border:1px solid var(--line);border-radius:50%;background:var(--surface);color:var(--muted)}
+.hero{padding:58px 0 36px;animation:rise .6s both}
+.eyebrow{margin:0 0 15px;color:#a8bcff;font:500 10px "JetBrains Mono",monospace;letter-spacing:1.1px}
+h1{margin:0;font-size:clamp(48px,8vw,76px);line-height:.98;letter-spacing:-4px}
+h1 em,.tips-title em{background:linear-gradient(100deg,#86b7ff,#aaa5ff,#e3a8ff);background-clip:text;-webkit-background-clip:text;color:transparent;font-family:Georgia,serif;font-weight:400}
+.hero-copy{margin:18px 0 0;color:#c2ccdd;font-size:14px}
+.layout{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(260px,.8fr);gap:16px}
+.panel{border:1px solid var(--line);border-radius:11px;background:rgba(18,24,38,.76);box-shadow:0 24px 60px rgba(0,0,0,.32),inset 0 1px rgba(255,255,255,.08);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px)}
+.calculator{padding:20px;animation:rise .65s .08s both}
+.calc-head,.heading,.display-meta,.setting{display:flex;align-items:center;justify-content:space-between}
+.calc-head{color:#b7c5ff;font:500 10px "JetBrains Mono",monospace;letter-spacing:.8px}
+.mode{display:flex;padding:3px;border:1px solid var(--line);border-radius:6px;background:rgba(2,6,16,.45)}
+.mode button{padding:6px 10px;border:0;border-radius:4px;background:transparent;color:var(--muted);font:10px "JetBrains Mono",monospace}
+.mode button.active{background:#405da7;color:white}
+.display{min-height:120px;margin:16px 0 10px;padding:12px 15px;border:1px solid var(--line);border-radius:7px;background:rgba(2,7,18,.57);display:flex;flex-direction:column;justify-content:space-between;text-align:right}
+.display-meta,.expression{color:#bdc8dc;font:11px "JetBrains Mono",monospace}
+.expression{min-height:18px;overflow-wrap:anywhere}
+.result{color:white;font:500 clamp(28px,5vw,38px) "JetBrains Mono",monospace;overflow-wrap:anywhere}
+#error{min-height:16px;color:#ff9aab;font-size:11px}
+.memory{display:flex;justify-content:space-between;margin:10px 0}
+.memory button{padding:5px 2px;border:0;background:transparent;color:#c3cde0;font:10px "JetBrains Mono",monospace}
+.memory button:hover{color:#d6dfff}
+.keys{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:7px}
+.keys button{min-width:0;height:41px;border:1px solid var(--line);border-radius:5px;background:rgba(255,255,255,.055);color:#eef2ff;font:500 13px "JetBrains Mono",monospace;transition:transform .18s,background .18s,border-color .18s}
+.keys button:hover{transform:translateY(-2px);border-color:rgba(150,176,255,.56);background:rgba(110,139,230,.16)}
+.keys button:active{transform:scale(.97)}
+.keys .fn{color:#c4cfff;background:rgba(102,125,210,.1);font-size:11px}
+.keys .op{color:#c5d1ff;background:rgba(94,118,210,.16)}
+.keys .clear{color:#ffbdc7;background:rgba(189,86,115,.12)}
+.keys .equals{border-color:#8299f6;background:linear-gradient(135deg,#527de7,#8669dc);color:white;box-shadow:0 6px 20px rgba(86,113,224,.34)}
+.hint{text-align:center;color:#adb9ce;font:10px "JetBrains Mono",monospace}
+.side{display:grid;align-content:start;gap:16px}
+.side .panel{padding:18px;animation:rise .65s .2s both}
+.heading{margin-bottom:14px}
+.small{color:#c0cadd;font:9px "JetBrains Mono",monospace;letter-spacing:1px}
+h2{margin:5px 0 0;color:#f5f7ff;font-size:18px}
+.text-button{border:0;background:transparent;color:var(--muted);font-size:11px}
+.history{min-height:100px}
+.empty{padding:20px;text-align:center;color:#c1cadd;font-size:12px;line-height:1.6}
+.history-item{display:flex;width:100%;justify-content:space-between;gap:10px;padding:10px 0;border:0;border-top:1px solid rgba(228,237,255,.12);background:transparent;text-align:left;font:11px "JetBrains Mono",monospace}
+.history-item span{overflow:hidden;color:#bdc8dc;text-overflow:ellipsis;white-space:nowrap}
+.history-item b{color:#f2f5ff;white-space:nowrap}
+.setting{padding:9px 0;border-top:1px solid rgba(228,237,255,.13);color:#c0cadd;font-size:11px}
+input[type=color]{width:42px;height:24px;padding:2px;border:1px solid var(--line);border-radius:4px;background:#111a2a}
+select{max-width:145px;padding:5px;border:1px solid var(--line);border-radius:4px;background:#111a2a;color:#eef2ff;font-size:11px}
+.palettes{display:flex;gap:8px;margin-top:10px}
+.palette{width:42px;height:23px;border:1px solid #fff4;border-radius:4px}
+.paper{background:linear-gradient(90deg,#f3f5f4 50%,#226c55 50%)}
+.night{background:linear-gradient(90deg,#07090e 50%,#8aa7ff 50%)}
+.citrus{background:linear-gradient(90deg,#f7f4dc 50%,#7e8a28 50%)}
+.rose{background:linear-gradient(90deg,#f6eeee 50%,#a54d65 50%)}
+.tips{padding:76px 0 28px;animation:rise .7s .2s both}
+.tips-title{margin:0 0 24px;color:#f7f8ff;font-size:38px;line-height:1.05;letter-spacing:-1px}
+.tip-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:11px}
+.tip{min-height:205px;padding:15px;border:1px solid var(--line);border-radius:8px;background:rgba(18,24,38,.62);backdrop-filter:blur(18px);transition:transform .25s,border-color .25s}
+.tip:hover{transform:translateY(-5px);border-color:rgba(142,169,255,.5)}
+.tip h3{margin:14px 0 8px;font-size:13px}
+.tip p{color:#c0cadb;font-size:11px;line-height:1.7}
+.tip code{color:#d2dcff;font:10px "JetBrains Mono",monospace}
+.learn{margin:30px 0 55px;padding:24px;border:1px solid rgba(185,198,255,.2);border-radius:9px;background:linear-gradient(110deg,rgba(47,65,121,.64),rgba(45,36,89,.6));animation:glow 5s ease-in-out infinite alternate}
+.learn h2{margin-top:7px}
+.learn strong{background:linear-gradient(90deg,#9bd0ff,#c2a9ff);background-clip:text;-webkit-background-clip:text;color:transparent}
+footer{display:flex;justify-content:space-between;padding:20px 0;border-top:1px solid var(--line);color:#c0cadd;font-size:11px}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes glow{to{box-shadow:0 0 40px rgba(115,110,230,.18)}}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #a6bdff;outline-offset:3px}
+@media(max-width:760px){.layout{grid-template-columns:1fr}.side{grid-template-columns:1fr 1fr}.tip-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:520px){header,main,footer{width:calc(100% - 30px)}.side{grid-template-columns:1fr}.keys{gap:5px}.keys button{height:42px}.tip-grid{gap:8px}.tip{padding:12px}.hero{padding-top:45px}h1{letter-spacing:-3px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+</style>
 </head>
 <body>
-  <header class="topbar">
-    <div class="brand">∿ arc <span class="muted">/ calculator</span></div>
-    <div><span class="status">● Ready when you are</span>
-      <button class="reset" id="reset" title="Reset appearance" aria-label="Reset appearance">↺</button>
-    </div>
-  </header>
+<div id="glow" aria-hidden="true"></div>
 
-  <main>
-    <section class="hero">
-      <div class="eyebrow">01 / YOUR EVERYDAY SCIENCE DESK</div>
-      <h1>Make room<br>for <em>what if.</em></h1>
-      <p>From quick sums to curious detours. A little more power for every problem.</p>
-    </section>
+<header>
+  <div class="brand">∿ arc <span>/ calculator</span></div>
+  <div><span class="status">● Ready when you are</span>
+    <button id="reset" title="Reset appearance" aria-label="Reset appearance">↺</button>
+  </div>
+</header>
 
-    <section class="layout" aria-label="Scientific calculator">
-      <article class="calculator panel">
-        <div class="calc-head">
-          <strong>✳ &nbsp; SCIENTIFIC</strong>
-          <div class="mode">
-            <button id="deg" class="active" aria-pressed="true">DEG</button>
-            <button id="rad" aria-pressed="false">RAD</button>
-          </div>
+<main>
+  <section class="hero">
+    <p class="eyebrow">01 / YOUR EVERYDAY SCIENCE DESK</p>
+    <h1>Make room<br>for <em>what if.</em></h1>
+    <p class="hero-copy">From quick sums to curious detours. A little more power for every problem.</p>
+  </section>
+
+  <section class="layout">
+    <article class="calculator panel" aria-label="Scientific calculator">
+      <div class="calc-head">
+        <strong>✳ &nbsp; SCIENTIFIC</strong>
+        <div class="mode">
+          <button id="deg" class="active" aria-pressed="true">DEG</button>
+          <button id="rad" aria-pressed="false">RAD</button>
         </div>
-
-        <div class="display">
-          <div class="display-meta"><span id="memoryMark">M ·</span><span id="modeLabel">DEG</span></div>
-          <div id="expression" class="expression" aria-live="polite"></div>
-          <div id="result" class="result" aria-live="polite">0</div>
-          <div id="error" role="alert"></div>
-        </div>
-
-        <div class="memory">
-          <button data-action="mc">MC</button><button data-action="mr">MR</button>
-          <button data-action="mplus">M+</button><button data-action="mminus">M−</button>
-          <button data-action="ans">Ans</button><button id="goHistory">History ↗</button>
-        </div>
-
-        <div class="keys" id="keys">
-          <button class="fn" data-insert="sin(">sin</button>
-          <button class="fn" data-insert="cos(">cos</button>
-          <button class="fn" data-insert="tan(">tan</button>
-          <button class="fn" data-insert="asin(">sin⁻¹</button>
-          <button class="fn" data-insert="acos(">cos⁻¹</button>
-          <button class="fn" data-insert="atan(">tan⁻¹</button>
-          <button class="fn" data-insert="sqrt(">√</button>
-          <button class="fn" data-insert="cbrt(">∛</button>
-          <button class="fn" data-insert="ln(">ln</button>
-          <button class="fn" data-insert="log(">log</button>
-          <button class="fn" data-insert="!">n!</button>
-          <button class="fn" data-insert="^">xʸ</button>
-          <button class="fn" data-insert="π">π</button>
-          <button class="fn" data-insert="e">e</button>
-          <button class="fn" data-insert="(">(</button>
-          <button class="fn" data-insert=")">)</button>
-          <button class="fn" data-insert="%">%</button>
-          <button class="fn" data-action="back">⌫</button>
-          <button data-insert="7">7</button><button data-insert="8">8</button>
-          <button data-insert="9">9</button><button class="op" data-insert="÷">÷</button>
-          <button data-insert="4">4</button><button data-insert="5">5</button>
-          <button data-insert="6">6</button><button class="op" data-insert="×">×</button>
-          <button data-insert="1">1</button><button data-insert="2">2</button>
-          <button data-insert="3">3</button><button class="op" data-insert="−">−</button>
-          <button class="clear" data-action="clear">AC</button><button data-insert="0">0</button>
-          <button data-insert=".">.</button><button class="op" data-insert="+">+</button>
-          <button class="op" data-insert="Ans">Ans</button>
-          <button class="equals" data-action="calculate">=</button>
-        </div>
-        <p class="hint">Enter calculates · Esc clears · Backspace edits</p>
-      </article>
-
-      <aside class="side">
-        <section class="panel" id="historyPanel">
-          <div class="heading">
-            <div><div class="small">YOUR SCRATCHPAD</div><h2>Recent work</h2></div>
-            <button class="text-button" id="clearHistory">Clear</button>
-          </div>
-          <div id="history" class="history"><div class="empty">Your calculations<br>will land here.</div></div>
-        </section>
-
-        <section class="panel">
-          <div class="heading">
-            <div><div class="small">MAKE IT YOURS</div><h2>Appearance</h2></div>
-            <span>✳</span>
-          </div>
-          <label class="setting">Background <input type="color" data-theme="--page" value="#f3f5f4"></label>
-          <label class="setting">Calculator <input type="color" data-theme="--surface" value="#ffffff"></label>
-          <label class="setting">Accent <input type="color" data-theme="--accent" value="#226c55"></label>
-          <label class="setting">Text <input type="color" data-theme="--ink" value="#202823"></label>
-          <label class="setting">Font
-            <select id="font">
-              <option value="Trebuchet MS">Trebuchet</option>
-              <option value="Arial">Arial</option>
-              <option value="Georgia">Georgia</option>
-              <option value="Verdana">Verdana</option>
-              <option value="Consolas">Consolas</option>
-            </select>
-          </label>
-          <div class="small">QUICK PALETTES</div>
-          <div class="presets">
-            <button class="preset paper" data-preset="paper" aria-label="Paper colors"></button>
-            <button class="preset night" data-preset="night" aria-label="Night colors"></button>
-            <button class="preset citrus" data-preset="citrus" aria-label="Citrus colors"></button>
-            <button class="preset rose" data-preset="rose" aria-label="Rose colors"></button>
-          </div>
-        </section>
-      </aside>
-    </section>
-
-    <section class="tips">
-      <div class="eyebrow">02 / A FEW SHORTCUTS</div>
-      <h2 class="tips-title">Little tricks.<br><em>Big brain energy.</em></h2>
-      <div class="tip-grid">
-        <article class="tip"><div class="small">01 / SPEED</div><h3>Use your keyboard</h3><p>Type an expression and press Enter. Backspace edits; Escape clears the display.</p><code>(24 + 6) × 3</code></article>
-        <article class="tip"><div class="small">02 / ANGLES</div><h3>Check angle mode</h3><p>Use DEG for everyday angles and RAD for radians. Check the mode before trig calculations.</p><code>sin(30) = 0.5 in DEG</code></article>
-        <article class="tip"><div class="small">03 / PERCENT</div><h3>Find a share</h3><p>Percent turns a number into hundredths. Multiply it by an amount to find a discount or share.</p><code>240 × 15% = 36</code></article>
-        <article class="tip"><div class="small">04 / REUSE</div><h3>Keep your result</h3><p>Tap a recent calculation to load it again. Use Ans for your last answer or M+ to store a value.</p><code>Ans × 2</code></article>
       </div>
-    </section>
 
-    <section class="learn">
-      <div class="eyebrow">KEEP ASKING GOOD QUESTIONS</div>
-      <h2>Learn with <strong>JUST_Hmm more....</strong></h2>
-    </section>
-  </main>
+      <div class="display">
+        <div class="display-meta"><span id="memoryMark">M ·</span><span id="modeLabel">DEG</span></div>
+        <div id="expression" class="expression" aria-live="polite"></div>
+        <div id="result" class="result" aria-live="polite">0</div>
+        <div id="error" role="alert"></div>
+      </div>
 
-  <footer><strong>∿ arc</strong><span>Made for curious minds. Keep exploring.</span></footer>
+      <div class="memory">
+        <button data-action="mc">MC</button><button data-action="mr">MR</button>
+        <button data-action="mplus">M+</button><button data-action="mminus">M−</button>
+        <button data-action="ans">Ans</button><button id="goHistory">History ↗</button>
+      </div>
 
-  <script>
-    (() => {
-      "use strict";
-      const $ = selector => document.querySelector(selector);
-      const expressionEl = $("#expression");
-      const resultEl = $("#result");
-      const errorEl = $("#error");
-      let expression = "";
-      let answer = 0;
-      let memory = 0;
-      let angle = "DEG";
-      let justCalculated = false;
+      <div class="keys" id="keys">
+        <button class="fn" data-insert="sin(">sin</button><button class="fn" data-insert="cos(">cos</button>
+        <button class="fn" data-insert="tan(">tan</button><button class="fn" data-insert="asin(">sin⁻¹</button>
+        <button class="fn" data-insert="acos(">cos⁻¹</button><button class="fn" data-insert="atan(">tan⁻¹</button>
+        <button class="fn" data-insert="sqrt(">√</button><button class="fn" data-insert="cbrt(">∛</button>
+        <button class="fn" data-insert="ln(">ln</button><button class="fn" data-insert="log(">log</button>
+        <button class="fn" data-insert="!">n!</button><button class="fn" data-insert="^">xʸ</button>
+        <button class="fn" data-insert="π">π</button><button class="fn" data-insert="e">e</button>
+        <button class="fn" data-insert="(">(</button><button class="fn" data-insert=")">)</button>
+        <button class="fn" data-insert="%">%</button><button class="fn" data-action="back">⌫</button>
+        <button data-insert="7">7</button><button data-insert="8">8</button><button data-insert="9">9</button><button class="op" data-insert="÷">÷</button>
+        <button data-insert="4">4</button><button data-insert="5">5</button><button data-insert="6">6</button><button class="op" data-insert="×">×</button>
+        <button data-insert="1">1</button><button data-insert="2">2</button><button data-insert="3">3</button><button class="op" data-insert="−">−</button>
+        <button class="clear" data-action="clear">AC</button><button data-insert="0">0</button><button data-insert=".">.</button>
+        <button class="op" data-insert="+">+</button><button data-insert="Ans">Ans</button><button class="equals" data-action="calculate">=</button>
+      </div>
+      <p class="hint">Enter calculates · Esc clears · Backspace edits</p>
+    </article>
 
-      const palettes = {
-        paper: ["#f3f5f4", "#ffffff", "#226c55", "#202823"],
-        night: ["#141a19", "#202927", "#74d2a9", "#edf4ef"],
-        citrus: ["#f7f4dc", "#fffdf4", "#7e8a28", "#292d18"],
-        rose: ["#f6eeee", "#fffafa", "#a54d65", "#34252a"]
-      };
-      const themeInputs = [...document.querySelectorAll("[data-theme]")];
+    <aside class="side">
+      <section class="panel" id="historyPanel">
+        <div class="heading">
+          <div><div class="small">YOUR SCRATCHPAD</div><h2>Recent work</h2></div>
+          <button class="text-button" id="clearHistory">Clear</button>
+        </div>
+        <div id="history" class="history"><div class="empty">Your calculations<br>will land here.</div></div>
+      </section>
 
-      function showError(message) { errorEl.textContent = message; }
-      function format(value) {
-        if (!Number.isFinite(value)) throw new Error("Result is outside the supported range.");
-        if (Math.abs(value) < 1e-13) return "0";
-        return Number(value.toPrecision(12)).toString();
+      <section class="panel">
+        <div class="heading"><div><div class="small">MAKE IT YOURS</div><h2>Appearance</h2></div><span>✳</span></div>
+        <label class="setting">Background <input type="color" data-theme="--page" value="#07090e"></label>
+        <label class="setting">Calculator <input type="color" data-theme="--surface" value="#121826"></label>
+        <label class="setting">Accent <input type="color" data-theme="--accent" value="#8aa7ff"></label>
+        <label class="setting">Text <input type="color" data-theme="--ink" value="#f3f6ff"></label>
+        <label class="setting">Font
+          <select id="font">
+            <option value="'Plus Jakarta Sans',sans-serif">Plus Jakarta Sans</option>
+            <option value="Arial,sans-serif">Arial</option>
+            <option value="Georgia,serif">Georgia</option>
+            <option value="Verdana,sans-serif">Verdana</option>
+            <option value="'JetBrains Mono',monospace">JetBrains Mono</option>
+          </select>
+        </label>
+        <p class="small">QUICK PALETTES</p>
+        <div class="palettes">
+          <button class="palette paper" data-preset="paper" aria-label="Paper palette"></button>
+          <button class="palette night" data-preset="night" aria-label="Night palette"></button>
+          <button class="palette citrus" data-preset="citrus" aria-label="Citrus palette"></button>
+          <button class="palette rose" data-preset="rose" aria-label="Rose palette"></button>
+        </div>
+      </section>
+    </aside>
+  </section>
+
+  <section class="tips">
+    <p class="eyebrow">02 / A FEW SHORTCUTS</p>
+    <h2 class="tips-title">Little tricks.<br><em>Big brain energy.</em></h2>
+    <div class="tip-grid">
+      <article class="tip"><div class="small">01 / SPEED</div><h3>Use your keyboard</h3><p>Type an expression and press Enter. Backspace edits; Escape clears.</p><code>(24 + 6) × 3</code></article>
+      <article class="tip"><div class="small">02 / ANGLES</div><h3>Check angle mode</h3><p>Use DEG for everyday angles and RAD for radians. Check the mode before trig calculations.</p><code>sin(30) = 0.5 in DEG</code></article>
+      <article class="tip"><div class="small">03 / PERCENT</div><h3>Find a share</h3><p>Percent turns a number into hundredths. Multiply it by an amount to find a discount or share.</p><code>240 × 15% = 36</code></article>
+      <article class="tip"><div class="small">04 / REUSE</div><h3>Keep your result</h3><p>Tap a recent calculation to load it again. Use Ans for your last answer or M+ to store a value.</p><code>Ans × 2</code></article>
+    </div>
+  </section>
+
+  <section class="learn">
+    <p class="eyebrow">KEEP ASKING GOOD QUESTIONS</p>
+    <h2>Learn with <strong>JUST_Hmm more....</strong></h2>
+  </section>
+</main>
+
+<footer><strong>∿ arc</strong><span>Made for curious minds. Keep exploring.</span></footer>
+
+<script>
+(() => {
+  "use strict";
+  const $ = s => document.querySelector(s);
+  let expression = "", answer = 0, memory = 0, angle = "DEG", fresh = false;
+  let history = [];
+  try { history = JSON.parse(localStorage.getItem("arc-history") || "[]"); } catch {}
+
+  const palettes = {
+    paper: ["#f3f5f4","#ffffff","#226c55","#202823"],
+    night: ["#07090e","#121826","#8aa7ff","#f3f6ff"],
+    citrus: ["#f7f4dc","#fffdf4","#7e8a28","#292d18"],
+    rose: ["#f6eeee","#fffafa","#a54d65","#34252a"]
+  };
+  const themeInputs = [...document.querySelectorAll("[data-theme]")];
+
+  function format(n) {
+    if (!Number.isFinite(n)) throw Error("Result is outside the supported range.");
+    if (Math.abs(n) < 1e-13) return "0";
+    return Number(n.toPrecision(12)).toString();
+  }
+
+  function tokenize(source) {
+    source = source.replaceAll("×","*").replaceAll("÷","/").replaceAll("−","-");
+    const re = /\s*([0-9]+(?:\.[0-9]*)?(?:e[+-]?[0-9]+)?|\.[0-9]+(?:e[+-]?[0-9]+)?|[A-Za-z]+|π|[()+\-*/^!%])/igy;
+    const tokens = [];
+    let pos = 0;
+    while (pos < source.length) {
+      re.lastIndex = pos;
+      const match = re.exec(source);
+      if (!match) throw Error("Check the expression near “" + source.slice(pos,pos+8) + "”.");
+      tokens.push(match[1]);
+      pos = re.lastIndex;
+    }
+    const ends = t => /^\d/.test(t) || [")","π","e","Ans","!","%"].includes(t);
+    const starts = t => /^\d/.test(t) || ["(","π","e","Ans"].includes(t) || /^(sin|cos|tan|asin|acos|atan|ln|log|sqrt|cbrt)$/i.test(t);
+    const out = [];
+    for (const t of tokens) {
+      if (out.length && ends(out.at(-1)) && starts(t)) out.push("*");
+      out.push(t);
+    }
+    return out;
+  }
+
+  function evaluate(source) {
+    const t = tokenize(source);
+    let i = 0;
+    const peek = () => t[i], take = () => t[i++];
+    const need = ch => { if (take() !== ch) throw Error("Check your parentheses."); };
+
+    function add() {
+      let x = multiply();
+      while (peek() === "+" || peek() === "-") {
+        const op = take(), y = multiply();
+        x = op === "+" ? x + y : x - y;
       }
-
-      function tokenize(source) {
-        source = source.replaceAll("×", "*").replaceAll("÷", "/").replaceAll("−", "-");
-        const pattern = /\s*([0-9]+(?:\.[0-9]*)?(?:e[+-]?[0-9]+)?|\.[0-9]+(?:e[+-]?[0-9]+)?|[A-Za-z]+|π|[()+\-*/^!%])/igy;
-        const tokens = [];
-        let position = 0;
-
-        while (position < source.length) {
-          pattern.lastIndex = position;
-          const match = pattern.exec(source);
-          if (!match) throw new Error("Check the expression near “" + source.slice(position, position + 8) + "”.");
-          tokens.push(match[1]);
-          position = pattern.lastIndex;
-        }
-
-        const endsValue = token =>
-          /^\d/.test(token) || [")", "π", "e", "Ans", "!"].includes(token) || token === "%";
-        const startsValue = token =>
-          /^\d/.test(token) || ["(", "π", "e", "Ans"].includes(token) ||
-          /^(sin|cos|tan|asin|acos|atan|ln|log|sqrt|cbrt)$/i.test(token);
-
-        const result = [];
-        for (const token of tokens) {
-          if (result.length && endsValue(result[result.length - 1]) && startsValue(token)) result.push("*");
-          result.push(token);
-        }
-        return result;
+      return x;
+    }
+    function multiply() {
+      let x = unary();
+      while (peek() === "*" || peek() === "/") {
+        const op = take(), y = unary();
+        if (op === "/" && y === 0) throw Error("Cannot divide by zero.");
+        x = op === "*" ? x * y : x / y;
       }
-
-      function evaluate(source) {
-        const tokens = tokenize(source);
-        let index = 0;
-        const peek = () => tokens[index];
-        const take = () => tokens[index++];
-        const expect = token => {
-          if (take() !== token) throw new Error("Check your parentheses and operators.");
-        };
-
-        function additive() {
-          let value = multiply();
-          while (peek() === "+" || peek() === "-") {
-            const op = take(), right = multiply();
-            value = op === "+" ? value + right : value - right;
-          }
-          return value;
-        }
-
-        function multiply() {
-          let value = unary();
-          while (peek() === "*" || peek() === "/") {
-            const op = take(), right = unary();
-            if (op === "/" && right === 0) throw new Error("Cannot divide by zero.");
-            value = op === "*" ? value * right : value / right;
-          }
-          return value;
-        }
-
-        function unary() {
-          if (peek() === "+") { take(); return unary(); }
-          if (peek() === "-") { take(); return -unary(); }
-          return power();
-        }
-
-        function power() {
-          let value = postfix();
-          if (peek() === "^") { take(); value = Math.pow(value, unary()); }
-          return value;
-        }
-
-        function postfix() {
-          let value = primary();
-          while (peek() === "!" || peek() === "%") {
-            const op = take();
-            if (op === "!") {
-              if (value < 0 || value > 170 || !Number.isInteger(value))
-                throw new Error("Factorial needs a whole number from 0 to 170.");
-              let factorial = 1;
-              for (let n = 2; n <= value; n++) factorial *= n;
-              value = factorial;
-            } else value /= 100;
-          }
-          return value;
-        }
-
-        function primary() {
-          const token = take();
-          if (token === undefined) throw new Error("Enter a calculation first.");
-          if (token === "(") { const value = additive(); expect(")"); return value; }
-          if (/^\d/.test(token) || /^\.\d/.test(token)) return Number(token);
-          if (token === "π") return Math.PI;
-          if (token.toLowerCase() === "e") return Math.E;
-          if (token.toLowerCase() === "ans") return answer;
-
-          const fn = token.toLowerCase();
-          if (/^(sin|cos|tan|asin|acos|atan|ln|log|sqrt|cbrt)$/.test(fn)) {
-            let value;
-            if (peek() === "(") { take(); value = additive(); expect(")"); }
-            else value = primary();
-
-            const toRadians = n => angle === "DEG" ? n * Math.PI / 180 : n;
-            const fromRadians = n => angle === "DEG" ? n * 180 / Math.PI : n;
-
-            switch (fn) {
-              case "sin": return Math.sin(toRadians(value));
-              case "cos": return Math.cos(toRadians(value));
-              case "tan":
-                if (Math.abs(Math.cos(toRadians(value))) < 1e-14)
-                  throw new Error("Tangent is undefined at this angle.");
-                return Math.tan(toRadians(value));
-              case "asin":
-                if (Math.abs(value) > 1) throw new Error("Inverse sine needs a value from −1 to 1.");
-                return fromRadians(Math.asin(value));
-              case "acos":
-                if (Math.abs(value) > 1) throw new Error("Inverse cosine needs a value from −1 to 1.");
-                return fromRadians(Math.acos(value));
-              case "atan": return fromRadians(Math.atan(value));
-              case "ln":
-                if (value <= 0) throw new Error("Natural log needs a positive value.");
-                return Math.log(value);
-              case "log":
-                if (value <= 0) throw new Error("Log needs a positive value.");
-                return Math.log10(value);
-              case "sqrt":
-                if (value < 0) throw new Error("Square root needs a non-negative value.");
-                return Math.sqrt(value);
-              case "cbrt": return Math.cbrt(value);
-            }
-          }
-          throw new Error("Unexpected “" + token + "”. Check the expression.");
-        }
-
-        const value = additive();
-        if (index < tokens.length) throw new Error("Check the expression near “" + tokens[index] + "”.");
-        if (!Number.isFinite(value)) throw new Error("Result is outside the supported range.");
-        return value;
+      return x;
+    }
+    function unary() {
+      if (peek() === "+") { take(); return unary(); }
+      if (peek() === "-") { take(); return -unary(); }
+      return power();
+    }
+    function power() {
+      let x = postfix();
+      if (peek() === "^") { take(); x = Math.pow(x, unary()); }
+      return x;
+    }
+    function postfix() {
+      let x = primary();
+      while (peek() === "!" || peek() === "%") {
+        const op = take();
+        if (op === "!") {
+          if (x < 0 || x > 170 || !Number.isInteger(x))
+            throw Error("Factorial needs a whole number from 0 to 170.");
+          let f = 1;
+          for (let n = 2; n <= x; n++) f *= n;
+          x = f;
+        } else x /= 100;
       }
+      return x;
+    }
+    function primary() {
+      const a = take();
+      if (a === undefined) throw Error("Enter a calculation first.");
+      if (a === "(") { const x = add(); need(")"); return x; }
+      if (/^\d/.test(a) || /^\.\d/.test(a)) return Number(a);
+      if (a === "π") return Math.PI;
+      if (a.toLowerCase() === "e") return Math.E;
+      if (a.toLowerCase() === "ans") return answer;
 
-      function render() {
-        expressionEl.textContent = expression;
-        resultEl.textContent = format(answer);
-        $("#modeLabel").textContent = angle;
-        $("#memoryMark").textContent = memory ? "M" : "M ·";
-        $("#deg").classList.toggle("active", angle === "DEG");
-        $("#rad").classList.toggle("active", angle === "RAD");
-        $("#deg").setAttribute("aria-pressed", angle === "DEG");
-        $("#rad").setAttribute("aria-pressed", angle === "RAD");
-      }
-
-      function insert(value) {
-        showError("");
-        if (justCalculated && !["+", "-", "−", "*", "×", "/", "÷", "^", "!", "%"].includes(value))
-          expression = "";
-        justCalculated = false;
-        expression += value;
-        expressionEl.textContent = expression;
-      }
-
-      let history = [];
-      try { history = JSON.parse(localStorage.getItem("arc-history") || "[]"); } catch {}
-
-      function renderHistory() {
-        const area = $("#history");
-        if (!history.length) {
-          area.innerHTML = '<div class="empty">Your calculations<br>will land here.</div>';
-          return;
-        }
-        area.innerHTML = history.map((item, i) =>
-          '<button class="history-item" data-history="' + i + '"><span>' +
-          escapeHtml(item.expression) + '</span><b>' + escapeHtml(item.result) + ' ↗</b></button>'
-        ).join("");
-      }
-
-      function escapeHtml(text) {
-        return text.replace(/[&<>"']/g, char =>
-          ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]
-        );
-      }
-
-      function calculate() {
-        if (!expression.trim()) return;
-        try {
-          const original = expression;
-          answer = evaluate(original);
-          resultEl.textContent = format(answer);
-          expressionEl.textContent = original;
-          showError("");
-          history.unshift({ expression: original, result: format(answer) });
-          history = history.slice(0, 8);
-          localStorage.setItem("arc-history", JSON.stringify(history));
-          renderHistory();
-          expression = format(answer);
-          justCalculated = true;
-        } catch (error) {
-          showError(error.message);
+      const fn = a.toLowerCase();
+      if (/^(sin|cos|tan|asin|acos|atan|ln|log|sqrt|cbrt)$/.test(fn)) {
+        let x;
+        if (peek() === "(") { take(); x = add(); need(")"); }
+        else x = primary();
+        const toRad = v => angle === "DEG" ? v * Math.PI / 180 : v;
+        const fromRad = v => angle === "DEG" ? v * 180 / Math.PI : v;
+        switch (fn) {
+          case "sin": return Math.sin(toRad(x));
+          case "cos": return Math.cos(toRad(x));
+          case "tan":
+            if (Math.abs(Math.cos(toRad(x))) < 1e-14) throw Error("Tangent is undefined at this angle.");
+            return Math.tan(toRad(x));
+          case "asin":
+            if (Math.abs(x) > 1) throw Error("Inverse sine needs a value from −1 to 1.");
+            return fromRad(Math.asin(x));
+          case "acos":
+            if (Math.abs(x) > 1) throw Error("Inverse cosine needs a value from −1 to 1.");
+            return fromRad(Math.acos(x));
+          case "atan": return fromRad(Math.atan(x));
+          case "ln":
+            if (x <= 0) throw Error("Natural log needs a positive value.");
+            return Math.log(x);
+          case "log":
+            if (x <= 0) throw Error("Log needs a positive value.");
+            return Math.log10(x);
+          case "sqrt":
+            if (x < 0) throw Error("Square root needs a non-negative value.");
+            return Math.sqrt(x);
+          case "cbrt": return Math.cbrt(x);
         }
       }
+      throw Error("Unexpected “" + a + "”. Check the expression.");
+    }
 
-      $("#keys").addEventListener("click", event => {
-        const button = event.target.closest("button");
-        if (!button) return;
-        if (button.dataset.insert !== undefined) { insert(button.dataset.insert); return; }
+    const value = add();
+    if (i < t.length) throw Error("Check the expression near “" + t[i] + "”.");
+    if (!Number.isFinite(value)) throw Error("Result is outside the supported range.");
+    return value;
+  }
 
-        switch (button.dataset.action) {
-          case "calculate": calculate(); break;
-          case "clear":
-            expression = ""; answer = 0; justCalculated = false;
-            expressionEl.textContent = ""; resultEl.textContent = "0"; showError("");
-            break;
-          case "back":
-            expression = expression.slice(0, -1); justCalculated = false; render();
-            break;
-        }
-      });
+  function render() {
+    $("#expression").textContent = expression;
+    $("#result").textContent = format(answer);
+    $("#modeLabel").textContent = angle;
+    $("#memoryMark").textContent = memory ? "M" : "M ·";
+    $("#deg").classList.toggle("active", angle === "DEG");
+    $("#rad").classList.toggle("active", angle === "RAD");
+    $("#deg").setAttribute("aria-pressed", angle === "DEG");
+    $("#rad").setAttribute("aria-pressed", angle === "RAD");
+  }
 
-      document.querySelector(".memory").addEventListener("click", event => {
-        const action = event.target.dataset.action;
-        if (!action) return;
+  function insert(value) {
+    $("#error").textContent = "";
+    if (fresh && !["+","-","−","*","×","/","÷","^","!","%"].includes(value)) expression = "";
+    fresh = false;
+    expression += value;
+    $("#expression").textContent = expression;
+  }
 
-        if (action === "ans") insert("Ans");
-        if (action === "mc") { memory = 0; render(); }
-        if (action === "mr") insert(format(memory));
-        if (action === "mplus" || action === "mminus") {
-          try {
-            const value = expression ? evaluate(expression) : answer;
-            memory += action === "mplus" ? value : -value;
-            render();
-          } catch (error) { showError(error.message); }
-        }
-      });
+  function escapeHtml(s) {
+    return s.replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  }
 
-      $("#goHistory").onclick = () => $("#historyPanel").scrollIntoView({ behavior: "smooth" });
-      $("#history").addEventListener("click", event => {
-        const button = event.target.closest("[data-history]");
-        if (!button) return;
-        expression = history[Number(button.dataset.history)].expression;
-        justCalculated = false;
-        showError("");
-        render();
-      });
+  function renderHistory() {
+    const box = $("#history");
+    if (!history.length) {
+      box.innerHTML = '<div class="empty">Your calculations<br>will land here.</div>';
+      return;
+    }
+    box.innerHTML = history.map((item,n) =>
+      '<button class="history-item" data-history="'+n+'"><span>'+escapeHtml(item.expression)+'</span><b>'+escapeHtml(item.result)+' ↗</b></button>'
+    ).join("");
+  }
 
-      $("#clearHistory").onclick = () => {
-        history = [];
-        localStorage.removeItem("arc-history");
-        renderHistory();
-      };
-
-      $("#deg").onclick = () => { angle = "DEG"; render(); };
-      $("#rad").onclick = () => { angle = "RAD"; render(); };
-
-      document.addEventListener("keydown", event => {
-        if (event.ctrlKey || event.metaKey || event.altKey) return;
-        if (event.key === "Enter" || event.key === "=") { event.preventDefault(); calculate(); }
-        else if (event.key === "Escape") {
-          expression = ""; answer = 0; justCalculated = false;
-          expressionEl.textContent = ""; resultEl.textContent = "0"; showError("");
-        } else if (event.key === "Backspace") {
-          expression = expression.slice(0, -1); justCalculated = false; render();
-        } else if (/^[0-9.+\-*/^()%!]$/.test(event.key) || event.key === "(" || event.key === ")") {
-          insert(event.key);
-        } else if (/^[a-zA-Z]$/.test(event.key)) {
-          insert(event.key);
-        }
-      });
-
-      themeInputs.forEach(input => {
-        const saved = localStorage.getItem("arc-" + input.dataset.theme);
-        if (saved) input.value = saved;
-        document.documentElement.style.setProperty(input.dataset.theme, input.value);
-        input.addEventListener("input", () => {
-          document.documentElement.style.setProperty(input.dataset.theme, input.value);
-          localStorage.setItem("arc-" + input.dataset.theme, input.value);
-        });
-      });
-
-      const fontSelect = $("#font");
-      fontSelect.value = localStorage.getItem("arc-font") || "Trebuchet MS";
-      document.documentElement.style.setProperty("--font", fontSelect.value);
-      fontSelect.onchange = () => {
-        document.documentElement.style.setProperty("--font", fontSelect.value);
-        localStorage.setItem("arc-font", fontSelect.value);
-      };
-
-      document.querySelectorAll("[data-preset]").forEach(button => {
-        button.onclick = () => {
-          const values = palettes[button.dataset.preset];
-          themeInputs.forEach((input, i) => {
-            input.value = values[i];
-            input.dispatchEvent(new Event("input"));
-          });
-        };
-      });
-
-      $("#reset").onclick = () => {
-        themeInputs.forEach(input => localStorage.removeItem("arc-" + input.dataset.theme));
-        fontSelect.value = "Trebuchet MS";
-        localStorage.removeItem("arc-font");
-        fontSelect.dispatchEvent(new Event("change"));
-        const defaults = palettes.paper;
-        themeInputs.forEach((input, i) => {
-          input.value = defaults[i];
-          input.dispatchEvent(new Event("input"));
-        });
-      };
-
-      render();
+  function calculate() {
+    if (!expression.trim()) return;
+    try {
+      const original = expression;
+      answer = evaluate(original);
+      $("#result").textContent = format(answer);
+      $("#error").textContent = "";
+      history.unshift({expression:original,result:format(answer)});
+      history = history.slice(0,8);
+      localStorage.setItem("arc-history",JSON.stringify(history));
       renderHistory();
-    })();
-  </script>
+      expression = format(answer);
+      fresh = true;
+    } catch (error) {
+      $("#error").textContent = error.message;
+    }
+  }
+
+  $("#keys").addEventListener("click", event => {
+    const b = event.target.closest("button");
+    if (!b) return;
+    if (b.dataset.insert !== undefined) { insert(b.dataset.insert); return; }
+    if (b.dataset.action === "calculate") calculate();
+    if (b.dataset.action === "back") { expression = expression.slice(0,-1); fresh = false; render(); }
+    if (b.dataset.action === "clear") {
+      expression = ""; answer = 0; fresh = false;
+      $("#error").textContent = ""; $("#result").textContent = "0"; render();
+    }
+  });
+
+  document.querySelector(".memory").addEventListener("click", event => {
+    const a = event.target.dataset.action;
+    if (!a) return;
+    if (a === "ans") insert("Ans");
+    if (a === "mc") { memory = 0; render(); }
+    if (a === "mr") insert(format(memory));
+    if (a === "mplus" || a === "mminus") {
+      try { const n = expression ? evaluate(expression) : answer; memory += a === "mplus" ? n : -n; render(); }
+      catch (error) { $("#error").textContent = error.message; }
+    }
+  });
+
+  $("#deg").onclick = () => { angle = "DEG"; render(); };
+  $("#rad").onclick = () => { angle = "RAD"; render(); };
+  $("#goHistory").onclick = () => $("#historyPanel").scrollIntoView({behavior:"smooth"});
+  $("#clearHistory").onclick = () => { history = []; localStorage.removeItem("arc-history"); renderHistory(); };
+  $("#history").addEventListener("click", event => {
+    const b = event.target.closest("[data-history]");
+    if (b) { expression = history[Number(b.dataset.history)].expression; fresh = false; render(); }
+  });
+
+  document.addEventListener("keydown", event => {
+    if (event.ctrlKey || event.metaKey || event.altKey) return;
+    if (event.key === "Enter" || event.key === "=") { event.preventDefault(); calculate(); }
+    else if (event.key === "Escape") {
+      expression = ""; answer = 0; fresh = false;
+      $("#error").textContent = ""; $("#result").textContent = "0"; render();
+    } else if (event.key === "Backspace") {
+      expression = expression.slice(0,-1); fresh = false; render();
+    } else if (/^[0-9.+\-*/^()%!]$/.test(event.key) || event.key === "(" || event.key === ")") insert(event.key);
+    else if (/^[a-zA-Z]$/.test(event.key)) insert(event.key);
+  });
+
+  themeInputs.forEach(input => {
+    const saved = localStorage.getItem("arc-" + input.dataset.theme);
+    if (saved) input.value = saved;
+    document.documentElement.style.setProperty(input.dataset.theme,input.value);
+    input.addEventListener("input",() => {
+      document.documentElement.style.setProperty(input.dataset.theme,input.value);
+      localStorage.setItem("arc-" + input.dataset.theme,input.value);
+    });
+  });
+
+  const font = $("#font");
+  font.value = localStorage.getItem("arc-font") || "'Plus Jakarta Sans',sans-serif";
+  document.documentElement.style.setProperty("--font",font.value);
+  font.onchange = () => {
+    document.documentElement.style.setProperty("--font",font.value);
+    localStorage.setItem("arc-font",font.value);
+  };
+
+  document.querySelectorAll("[data-preset]").forEach(button => {
+    button.onclick = () => palettes[button.dataset.preset].forEach((color,i) => {
+      themeInputs[i].value = color;
+      themeInputs[i].dispatchEvent(new Event("input"));
+    });
+  });
+
+  $("#reset").onclick = () => {
+    themeInputs.forEach(input => localStorage.removeItem("arc-" + input.dataset.theme));
+    localStorage.removeItem("arc-font");
+    font.value = "'Plus Jakarta Sans',sans-serif";
+    font.dispatchEvent(new Event("change"));
+    palettes.night.forEach((color,i) => {
+      themeInputs[i].value = color;
+      themeInputs[i].dispatchEvent(new Event("input"));
+    });
+  };
+
+  const glow = $("#glow");
+  window.addEventListener("pointermove",event => {
+    glow.style.left = event.clientX + "px";
+    glow.style.top = event.clientY + "px";
+  },{passive:true});
+
+  render();
+  renderHistory();
+})();
+</script>
 </body>
 </html>
