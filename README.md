@@ -1,5 +1,3 @@
-# WebDev009
-free use of public websites 
 # 💫 About Me:
 👋 Hey there! I'm **JustHmm\_**<br><br>💻 First-year B.Tech CSE (AI & ML) student<br>🐍 Exploring Python and C++<br>🧠 Learning Data Structures & Algorithms<br>🤖 Interested in Artificial Intelligence and Machine Learning<br>🚀 Building my skills one commit at a time.<br><br>✨ *Code. Learn. Build. Repeat.*<br>
 
