@@ -1,491 +1,344 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Arc — Scientific Calculator</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lumen Calc – Scientific Calculator, Games & Music</title>
 <style>
-:root{--page:#07090e;--surface:#121826;--ink:#f3f6ff;--muted:#bdc6d8;--accent:#8aa7ff;--line:rgba(226,235,255,.17);--font:"Plus Jakarta Sans",sans-serif}
-*{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{margin:0;min-height:100vh;overflow-x:hidden;background-color:var(--page);background-image:radial-gradient(ellipse at 50% -10%,rgba(72,94,174,.22),transparent 55%),linear-gradient(rgba(180,200,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(180,200,255,.025) 1px,transparent 1px);background-size:auto,42px 42px,42px 42px;color:var(--ink);font-family:var(--font);transition:background-color .2s,color .2s}
-button,input,select{font:inherit}
-button{color:inherit;cursor:pointer}
-#glow{position:fixed;z-index:0;left:50%;top:30%;width:430px;height:430px;transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;background:radial-gradient(circle,rgba(105,130,255,.16),transparent 70%);filter:blur(14px)}
-header,main,footer{position:relative;z-index:1;width:min(1080px,calc(100% - 36px));margin:auto}
-header{height:68px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);font-size:12px}
-.brand{font-size:19px;font-weight:800;letter-spacing:-1px}
-.brand span,.status{color:var(--muted);font-size:11px;font-weight:400;letter-spacing:0}
-#reset{margin-left:10px;width:28px;height:28px;border:1px solid var(--line);border-radius:50%;background:var(--surface);color:var(--muted)}
-.hero{padding:58px 0 36px;animation:rise .6s both}
-.eyebrow{margin:0 0 15px;color:#a8bcff;font:500 10px "JetBrains Mono",monospace;letter-spacing:1.1px}
-h1{margin:0;font-size:clamp(48px,8vw,76px);line-height:.98;letter-spacing:-4px}
-h1 em,.tips-title em{background:linear-gradient(100deg,#86b7ff,#aaa5ff,#e3a8ff);background-clip:text;-webkit-background-clip:text;color:transparent;font-family:Georgia,serif;font-weight:400}
-.hero-copy{margin:18px 0 0;color:#c2ccdd;font-size:14px}
-.layout{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(260px,.8fr);gap:16px}
-.panel{border:1px solid var(--line);border-radius:11px;background:rgba(18,24,38,.76);box-shadow:0 24px 60px rgba(0,0,0,.32),inset 0 1px rgba(255,255,255,.08);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px)}
-.calculator{padding:20px;animation:rise .65s .08s both}
-.calc-head,.heading,.display-meta,.setting{display:flex;align-items:center;justify-content:space-between}
-.calc-head{color:#b7c5ff;font:500 10px "JetBrains Mono",monospace;letter-spacing:.8px}
-.mode{display:flex;padding:3px;border:1px solid var(--line);border-radius:6px;background:rgba(2,6,16,.45)}
-.mode button{padding:6px 10px;border:0;border-radius:4px;background:transparent;color:var(--muted);font:10px "JetBrains Mono",monospace}
-.mode button.active{background:#405da7;color:white}
-.display{min-height:120px;margin:16px 0 10px;padding:12px 15px;border:1px solid var(--line);border-radius:7px;background:rgba(2,7,18,.57);display:flex;flex-direction:column;justify-content:space-between;text-align:right}
-.display-meta,.expression{color:#bdc8dc;font:11px "JetBrains Mono",monospace}
-.expression{min-height:18px;overflow-wrap:anywhere}
-.result{color:white;font:500 clamp(28px,5vw,38px) "JetBrains Mono",monospace;overflow-wrap:anywhere}
-#error{min-height:16px;color:#ff9aab;font-size:11px}
-.memory{display:flex;justify-content:space-between;margin:10px 0}
-.memory button{padding:5px 2px;border:0;background:transparent;color:#c3cde0;font:10px "JetBrains Mono",monospace}
-.memory button:hover{color:#d6dfff}
-.keys{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:7px}
-.keys button{min-width:0;height:41px;border:1px solid var(--line);border-radius:5px;background:rgba(255,255,255,.055);color:#eef2ff;font:500 13px "JetBrains Mono",monospace;transition:transform .18s,background .18s,border-color .18s}
-.keys button:hover{transform:translateY(-2px);border-color:rgba(150,176,255,.56);background:rgba(110,139,230,.16)}
-.keys button:active{transform:scale(.97)}
-.keys .fn{color:#c4cfff;background:rgba(102,125,210,.1);font-size:11px}
-.keys .op{color:#c5d1ff;background:rgba(94,118,210,.16)}
-.keys .clear{color:#ffbdc7;background:rgba(189,86,115,.12)}
-.keys .equals{border-color:#8299f6;background:linear-gradient(135deg,#527de7,#8669dc);color:white;box-shadow:0 6px 20px rgba(86,113,224,.34)}
-.hint{text-align:center;color:#adb9ce;font:10px "JetBrains Mono",monospace}
-.side{display:grid;align-content:start;gap:16px}
-.side .panel{padding:18px;animation:rise .65s .2s both}
-.heading{margin-bottom:14px}
-.small{color:#c0cadd;font:9px "JetBrains Mono",monospace;letter-spacing:1px}
-h2{margin:5px 0 0;color:#f5f7ff;font-size:18px}
-.text-button{border:0;background:transparent;color:var(--muted);font-size:11px}
-.history{min-height:100px}
-.empty{padding:20px;text-align:center;color:#c1cadd;font-size:12px;line-height:1.6}
-.history-item{display:flex;width:100%;justify-content:space-between;gap:10px;padding:10px 0;border:0;border-top:1px solid rgba(228,237,255,.12);background:transparent;text-align:left;font:11px "JetBrains Mono",monospace}
-.history-item span{overflow:hidden;color:#bdc8dc;text-overflow:ellipsis;white-space:nowrap}
-.history-item b{color:#f2f5ff;white-space:nowrap}
-.setting{padding:9px 0;border-top:1px solid rgba(228,237,255,.13);color:#c0cadd;font-size:11px}
-input[type=color]{width:42px;height:24px;padding:2px;border:1px solid var(--line);border-radius:4px;background:#111a2a}
-select{max-width:145px;padding:5px;border:1px solid var(--line);border-radius:4px;background:#111a2a;color:#eef2ff;font-size:11px}
-.palettes{display:flex;gap:8px;margin-top:10px}
-.palette{width:42px;height:23px;border:1px solid #fff4;border-radius:4px}
-.paper{background:linear-gradient(90deg,#f3f5f4 50%,#226c55 50%)}
-.night{background:linear-gradient(90deg,#07090e 50%,#8aa7ff 50%)}
-.citrus{background:linear-gradient(90deg,#f7f4dc 50%,#7e8a28 50%)}
-.rose{background:linear-gradient(90deg,#f6eeee 50%,#a54d65 50%)}
-.tips{padding:76px 0 28px;animation:rise .7s .2s both}
-.tips-title{margin:0 0 24px;color:#f7f8ff;font-size:38px;line-height:1.05;letter-spacing:-1px}
-.tip-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:11px}
-.tip{min-height:205px;padding:15px;border:1px solid var(--line);border-radius:8px;background:rgba(18,24,38,.62);backdrop-filter:blur(18px);transition:transform .25s,border-color .25s}
-.tip:hover{transform:translateY(-5px);border-color:rgba(142,169,255,.5)}
-.tip h3{margin:14px 0 8px;font-size:13px}
-.tip p{color:#c0cadb;font-size:11px;line-height:1.7}
-.tip code{color:#d2dcff;font:10px "JetBrains Mono",monospace}
-.learn{margin:30px 0 55px;padding:24px;border:1px solid rgba(185,198,255,.2);border-radius:9px;background:linear-gradient(110deg,rgba(47,65,121,.64),rgba(45,36,89,.6));animation:glow 5s ease-in-out infinite alternate}
-.learn h2{margin-top:7px}
-.learn strong{background:linear-gradient(90deg,#9bd0ff,#c2a9ff);background-clip:text;-webkit-background-clip:text;color:transparent}
-footer{display:flex;justify-content:space-between;padding:20px 0;border-top:1px solid var(--line);color:#c0cadd;font-size:11px}
-@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
-@keyframes glow{to{box-shadow:0 0 40px rgba(115,110,230,.18)}}
-button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #a6bdff;outline-offset:3px}
-@media(max-width:760px){.layout{grid-template-columns:1fr}.side{grid-template-columns:1fr 1fr}.tip-grid{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:520px){header,main,footer{width:calc(100% - 30px)}.side{grid-template-columns:1fr}.keys{gap:5px}.keys button{height:42px}.tip-grid{gap:8px}.tip{padding:12px}.hero{padding-top:45px}h1{letter-spacing:-3px}}
-@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+/* ===== CUSTOMIZE HERE: defaults (also editable live in the ⚙ panel) ===== */
+:root{
+  --a:#7c5cff; --b:#00d4ff;            /* accent colours */
+  --bg1:#0b0720; --bg2:#1b1250; --bg3:#05303f; /* background blobs */
+  --blur:22px; --glass:.10; --radius:20px; --depth:6px; --font:'Segoe UI',system-ui,sans-serif;
+  --txt:#f3f1ff; --muted:#b8b3dd;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%;font-family:var(--font);color:var(--txt);background:var(--bg1)}
+body{min-height:100vh;overflow-x:hidden}
+.bg{position:fixed;inset:0;z-index:-1;overflow:hidden;background:var(--bg1)}
+.bg i{position:absolute;border-radius:50%;filter:blur(80px);opacity:.75;animation:float 18s ease-in-out infinite alternate}
+.bg i:nth-child(1){width:50vmax;height:50vmax;background:var(--bg2);left:-10%;top:-15%}
+.bg i:nth-child(2){width:45vmax;height:45vmax;background:var(--bg3);right:-10%;bottom:-10%;animation-delay:-6s}
+.bg i:nth-child(3){width:30vmax;height:30vmax;background:var(--a);opacity:.35;left:40%;top:30%;animation-delay:-12s}
+@keyframes float{to{transform:translate(8vw,6vh) scale(1.15)}}
+.glass{background:linear-gradient(135deg,rgba(255,255,255,calc(var(--glass) + .06)),rgba(255,255,255,calc(var(--glass) * .4)));
+  backdrop-filter:blur(var(--blur)) saturate(170%);-webkit-backdrop-filter:blur(var(--blur)) saturate(170%);
+  border:1px solid rgba(255,255,255,.22);border-radius:var(--radius);
+  box-shadow:0 20px 50px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.35),inset 0 -1px 0 rgba(255,255,255,.06)}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;max-width:1000px;margin:16px auto 0;width:calc(100% - 24px)}
+.logo{font-weight:700;letter-spacing:.5px;font-size:1.15rem;background:linear-gradient(90deg,var(--a),var(--b));-webkit-background-clip:text;background-clip:text;color:transparent}
+nav{display:flex;gap:6px;flex-wrap:wrap}
+button{font:inherit;color:inherit;cursor:pointer}
+.tab,.icon{min-height:44px;padding:0 16px;border-radius:999px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.07);transition:.2s}
+.tab:hover,.icon:hover{background:rgba(255,255,255,.16)}
+.tab[aria-selected=true]{background:linear-gradient(135deg,var(--a),var(--b));border-color:transparent;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.35)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--b);outline-offset:2px}
+main{max-width:1000px;margin:16px auto 40px;width:calc(100% - 24px)}
+section{display:none}section.on{display:block;animation:in .35s ease}
+@keyframes in{from{opacity:0;transform:translateY(10px)}}
+/* ---- calculator ---- */
+.stage{perspective:1100px;display:flex;justify-content:center}
+.calc{width:min(420px,100%);padding:18px;transform-style:preserve-3d;transition:transform .15s ease-out}
+.screen{padding:12px 16px;border-radius:calc(var(--radius) - 6px);background:rgba(0,0,0,.35);box-shadow:inset 0 4px 14px rgba(0,0,0,.55);min-height:110px;display:flex;flex-direction:column;justify-content:space-between;text-align:right;margin-bottom:14px;transform:translateZ(18px)}
+.meta{display:flex;justify-content:space-between;font-size:.72rem;color:var(--b);letter-spacing:1px;height:16px}
+#expr{font-size:1.15rem;color:var(--muted);overflow-x:auto;white-space:nowrap;scrollbar-width:none;min-height:28px}
+#res{font-size:2.3rem;font-weight:600;overflow-x:auto;white-space:nowrap;scrollbar-width:none}
+.keys{display:grid;grid-template-columns:repeat(6,1fr);gap:9px;transform-style:preserve-3d}
+.k{position:relative;min-height:46px;padding:0;border-radius:calc(var(--radius) - 8px);border:1px solid rgba(255,255,255,.2);
+  background:linear-gradient(160deg,rgba(255,255,255,.2),rgba(255,255,255,.04));font-size:.95rem;
+  box-shadow:0 var(--depth) 0 rgba(0,0,0,.35),0 calc(var(--depth) + 6px) 14px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.4);
+  transform:translateZ(10px);transition:transform .08s,box-shadow .08s,filter .2s}
+.k:hover{filter:brightness(1.2)}
+.k:active,.k.p{transform:translateZ(10px) translateY(calc(var(--depth) - 1px));box-shadow:0 1px 0 rgba(0,0,0,.35),0 2px 6px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.3)}
+.k small{position:absolute;top:2px;left:6px;font-size:.6rem;color:var(--b);opacity:.9}
+.k.fn{font-size:.82rem}
+.k.op{background:linear-gradient(160deg,rgba(255,255,255,.28),rgba(255,255,255,.06))}
+.k.eq{background:linear-gradient(135deg,var(--a),var(--b));border-color:transparent;font-weight:700}
+.k.ac{background:linear-gradient(135deg,#ff5f7e,#ff9a5f);border-color:transparent;font-weight:700}
+.k.on{background:linear-gradient(135deg,var(--a),var(--b));border-color:transparent}
+.hist{margin-top:14px;padding:14px;max-height:170px;overflow:auto;font-size:.9rem}
+.hist div{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.08);cursor:pointer}
+.hist span:last-child{color:var(--b)}
+/* ---- panels ---- */
+.card{padding:18px;margin-bottom:14px}
+h2{margin:0 0 12px;font-size:1.1rem}
+.games{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.board{display:grid;gap:8px;margin:10px auto;width:min(300px,100%)}
+.cell{aspect-ratio:1;border-radius:14px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);font-size:2rem;font-weight:700;min-height:44px;transition:.15s}
+.cell:hover{background:rgba(255,255,255,.18)}
+.cell.flip{background:linear-gradient(135deg,var(--a),var(--b));transform:rotateY(180deg)}
+.cell.done{background:rgba(80,255,160,.3);transform:none}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{min-height:44px;padding:0 18px;border-radius:12px;border:0;font-weight:600;background:linear-gradient(135deg,var(--a),var(--b));box-shadow:0 5px 16px rgba(0,0,0,.35)}
+input[type=text],input[type=number],input[type=password],select{min-height:44px;padding:0 12px;border-radius:12px;border:1px solid rgba(255,255,255,.25);background:rgba(0,0,0,.3);color:var(--txt);font:inherit;max-width:100%}
+select option{color:#111}
+.vids{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.vid{display:block;text-decoration:none;color:inherit;border-radius:14px;overflow:hidden;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);transition:.2s}
+.vid:hover{transform:translateY(-4px) scale(1.02)}
+.vid img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;background:#222}
+.vid div{padding:10px;font-size:.88rem}.vid em{display:block;color:var(--muted);font-size:.78rem;margin-top:3px;font-style:normal}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips a{min-height:44px;display:inline-flex;align-items:center;padding:0 16px;border-radius:999px;text-decoration:none;color:inherit;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2)}
+.chips a:hover{background:linear-gradient(135deg,var(--a),var(--b))}
+/* ---- settings drawer ---- */
+#set{position:fixed;top:0;right:0;height:100%;width:min(340px,100%);padding:18px;overflow:auto;transform:translateX(110%);transition:transform .3s;z-index:20;border-radius:var(--radius) 0 0 var(--radius)}
+#set.open{transform:none}
+#set label{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:12px 0;font-size:.9rem}
+#set input[type=color]{width:56px;height:40px;border:0;background:none;padding:0}
+#set input[type=range]{width:150px}
+.swatches{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.sw{width:44px;height:44px;border-radius:50%;border:2px solid rgba(255,255,255,.5);padding:0}
+.hide{display:none!important}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media (max-width:420px){.keys{gap:6px}.k{min-height:44px}#res{font-size:2rem}}
 </style>
 </head>
 <body>
-<div id="glow" aria-hidden="true"></div>
+<div class="bg" aria-hidden="true"><i></i><i></i><i></i></div>
 
-<header>
-  <div class="brand">∿ arc <span>/ calculator</span></div>
-  <div><span class="status">● Ready when you are</span>
-    <button id="reset" title="Reset appearance" aria-label="Reset appearance">↺</button>
-  </div>
+<header class="glass">
+  <div class="logo">◈ LUMEN CALC</div>
+  <nav role="tablist" aria-label="Sections">
+    <button class="tab" role="tab" aria-selected="true" data-t="calc">Calculator</button>
+    <button class="tab" role="tab" aria-selected="false" data-t="games">Games</button>
+    <button class="tab" role="tab" aria-selected="false" data-t="media">Trending</button>
+    <button class="icon" id="gear" aria-label="Open customize panel">⚙ Customize</button>
+  </nav>
 </header>
 
 <main>
-  <section class="hero">
-    <p class="eyebrow">01 / YOUR EVERYDAY SCIENCE DESK</p>
-    <h1>Make room<br>for <em>what if.</em></h1>
-    <p class="hero-copy">From quick sums to curious detours. A little more power for every problem.</p>
-  </section>
-
-  <section class="layout">
-    <article class="calculator panel" aria-label="Scientific calculator">
-      <div class="calc-head">
-        <strong>✳ &nbsp; SCIENTIFIC</strong>
-        <div class="mode">
-          <button id="deg" class="active" aria-pressed="true">DEG</button>
-          <button id="rad" aria-pressed="false">RAD</button>
-        </div>
+<!-- ============ CALCULATOR ============ -->
+<section id="calc" class="on">
+  <div class="stage" id="stage">
+    <div class="calc glass" id="calcBody">
+      <div class="screen" aria-live="polite">
+        <div class="meta"><span id="sh"></span><span id="mode">DEG</span></div>
+        <div id="expr"></div>
+        <div id="res">0</div>
       </div>
-
-      <div class="display">
-        <div class="display-meta"><span id="memoryMark">M ·</span><span id="modeLabel">DEG</span></div>
-        <div id="expression" class="expression" aria-live="polite"></div>
-        <div id="result" class="result" aria-live="polite">0</div>
-        <div id="error" role="alert"></div>
-      </div>
-
-      <div class="memory">
-        <button data-action="mc">MC</button><button data-action="mr">MR</button>
-        <button data-action="mplus">M+</button><button data-action="mminus">M−</button>
-        <button data-action="ans">Ans</button><button id="goHistory">History ↗</button>
-      </div>
-
-      <div class="keys" id="keys">
-        <button class="fn" data-insert="sin(">sin</button><button class="fn" data-insert="cos(">cos</button>
-        <button class="fn" data-insert="tan(">tan</button><button class="fn" data-insert="asin(">sin⁻¹</button>
-        <button class="fn" data-insert="acos(">cos⁻¹</button><button class="fn" data-insert="atan(">tan⁻¹</button>
-        <button class="fn" data-insert="sqrt(">√</button><button class="fn" data-insert="cbrt(">∛</button>
-        <button class="fn" data-insert="ln(">ln</button><button class="fn" data-insert="log(">log</button>
-        <button class="fn" data-insert="!">n!</button><button class="fn" data-insert="^">xʸ</button>
-        <button class="fn" data-insert="π">π</button><button class="fn" data-insert="e">e</button>
-        <button class="fn" data-insert="(">(</button><button class="fn" data-insert=")">)</button>
-        <button class="fn" data-insert="%">%</button><button class="fn" data-action="back">⌫</button>
-        <button data-insert="7">7</button><button data-insert="8">8</button><button data-insert="9">9</button><button class="op" data-insert="÷">÷</button>
-        <button data-insert="4">4</button><button data-insert="5">5</button><button data-insert="6">6</button><button class="op" data-insert="×">×</button>
-        <button data-insert="1">1</button><button data-insert="2">2</button><button data-insert="3">3</button><button class="op" data-insert="−">−</button>
-        <button class="clear" data-action="clear">AC</button><button data-insert="0">0</button><button data-insert=".">.</button>
-        <button class="op" data-insert="+">+</button><button data-insert="Ans">Ans</button><button class="equals" data-action="calculate">=</button>
-      </div>
-      <p class="hint">Enter calculates · Esc clears · Backspace edits</p>
-    </article>
-
-    <aside class="side">
-      <section class="panel" id="historyPanel">
-        <div class="heading">
-          <div><div class="small">YOUR SCRATCHPAD</div><h2>Recent work</h2></div>
-          <button class="text-button" id="clearHistory">Clear</button>
-        </div>
-        <div id="history" class="history"><div class="empty">Your calculations<br>will land here.</div></div>
-      </section>
-
-      <section class="panel">
-        <div class="heading"><div><div class="small">MAKE IT YOURS</div><h2>Appearance</h2></div><span>✳</span></div>
-        <label class="setting">Background <input type="color" data-theme="--page" value="#07090e"></label>
-        <label class="setting">Calculator <input type="color" data-theme="--surface" value="#121826"></label>
-        <label class="setting">Accent <input type="color" data-theme="--accent" value="#8aa7ff"></label>
-        <label class="setting">Text <input type="color" data-theme="--ink" value="#f3f6ff"></label>
-        <label class="setting">Font
-          <select id="font">
-            <option value="'Plus Jakarta Sans',sans-serif">Plus Jakarta Sans</option>
-            <option value="Arial,sans-serif">Arial</option>
-            <option value="Georgia,serif">Georgia</option>
-            <option value="Verdana,sans-serif">Verdana</option>
-            <option value="'JetBrains Mono',monospace">JetBrains Mono</option>
-          </select>
-        </label>
-        <p class="small">QUICK PALETTES</p>
-        <div class="palettes">
-          <button class="palette paper" data-preset="paper" aria-label="Paper palette"></button>
-          <button class="palette night" data-preset="night" aria-label="Night palette"></button>
-          <button class="palette citrus" data-preset="citrus" aria-label="Citrus palette"></button>
-          <button class="palette rose" data-preset="rose" aria-label="Rose palette"></button>
-        </div>
-      </section>
-    </aside>
-  </section>
-
-  <section class="tips">
-    <p class="eyebrow">02 / A FEW SHORTCUTS</p>
-    <h2 class="tips-title">Little tricks.<br><em>Big brain energy.</em></h2>
-    <div class="tip-grid">
-      <article class="tip"><div class="small">01 / SPEED</div><h3>Use your keyboard</h3><p>Type an expression and press Enter. Backspace edits; Escape clears.</p><code>(24 + 6) × 3</code></article>
-      <article class="tip"><div class="small">02 / ANGLES</div><h3>Check angle mode</h3><p>Use DEG for everyday angles and RAD for radians. Check the mode before trig calculations.</p><code>sin(30) = 0.5 in DEG</code></article>
-      <article class="tip"><div class="small">03 / PERCENT</div><h3>Find a share</h3><p>Percent turns a number into hundredths. Multiply it by an amount to find a discount or share.</p><code>240 × 15% = 36</code></article>
-      <article class="tip"><div class="small">04 / REUSE</div><h3>Keep your result</h3><p>Tap a recent calculation to load it again. Use Ans for your last answer or M+ to store a value.</p><code>Ans × 2</code></article>
+      <div class="keys" id="keys"></div>
     </div>
-  </section>
+  </div>
+  <div class="glass hist" id="hist" style="max-width:420px;margin:14px auto 0"><strong>History</strong><div class="hide"></div></div>
+</section>
 
-  <section class="learn">
-    <p class="eyebrow">KEEP ASKING GOOD QUESTIONS</p>
-    <h2>Learn with <strong>JUST_Hmm more....</strong></h2>
-  </section>
+<!-- ============ GAMES ============ -->
+<section id="games">
+  <div class="games">
+    <div class="glass card"><h2>Tic‑Tac‑Toe (vs AI)</h2>
+      <div class="board" id="ttt" style="grid-template-columns:repeat(3,1fr)"></div>
+      <div class="row"><span id="tttMsg">Your move (X)</span><button class="btn" id="tttReset">Restart</button></div></div>
+    <div class="glass card"><h2>Memory Match</h2>
+      <div class="board" id="mem" style="grid-template-columns:repeat(4,1fr)"></div>
+      <div class="row"><span id="memMsg">Moves: 0</span><button class="btn" id="memReset">Shuffle</button></div></div>
+    <div class="glass card"><h2>Guess the Number (1–100)</h2>
+      <div class="row"><input type="number" id="gIn" min="1" max="100" aria-label="Your guess"><button class="btn" id="gBtn">Guess</button><button class="btn" id="gReset">New</button></div>
+      <p id="gMsg">I'm thinking of a number…</p></div>
+    <div class="glass card"><h2>Quick Math Sprint</h2>
+      <div class="row"><strong id="qQ" style="font-size:1.5rem">–</strong><input type="number" id="qIn" aria-label="Answer"><button class="btn" id="qGo">Start</button></div>
+      <p id="qMsg">Answer as many as you can in 30s.</p></div>
+  </div>
+</section>
+
+<!-- ============ MEDIA ============ -->
+<section id="media">
+  <div class="glass card"><h2>Open trending right now</h2>
+    <div class="chips" id="chips"></div>
+    <p style="color:var(--muted);font-size:.85rem">These open live YouTube pages, so they are always up to date. Edit the <code>LINKS</code> list in the code to add your favourites.</p></div>
+  <div class="glass card"><h2>Live in‑page feed (optional)</h2>
+    <p style="font-size:.9rem;color:var(--muted)">Paste a free YouTube Data API v3 key to show live trending videos here. It stays only in your browser.</p>
+    <div class="row"><input type="password" id="ytKey" placeholder="API key" aria-label="YouTube API key"><select id="ytCat" aria-label="Category"><option value="10">Music (Bollywood/hits)</option><option value="">All trending</option><option value="24">Entertainment</option><option value="20">Gaming</option></select><button class="btn" id="ytGo">Load India trending</button></div>
+    <p id="ytMsg"></p><div class="vids" id="vids"></div></div>
+</section>
 </main>
 
-<footer><strong>∿ arc</strong><span>Made for curious minds. Keep exploring.</span></footer>
+<!-- ============ CUSTOMIZE PANEL ============ -->
+<aside id="set" class="glass" aria-label="Customize">
+  <div class="row" style="justify-content:space-between"><h2 style="margin:0">Customize</h2><button class="icon" id="close" aria-label="Close panel">✕</button></div>
+  <div class="swatches" id="presets"></div>
+  <label>Accent 1 <input type="color" data-v="--a"></label>
+  <label>Accent 2 <input type="color" data-v="--b"></label>
+  <label>Background 1 <input type="color" data-v="--bg1"></label>
+  <label>Background 2 <input type="color" data-v="--bg2"></label>
+  <label>Background 3 <input type="color" data-v="--bg3"></label>
+  <label>Glass blur <input type="range" min="0" max="50" data-v="--blur" data-u="px"></label>
+  <label>Glass opacity <input type="range" min="2" max="40" data-v="--glass" data-s="100"></label>
+  <label>Corner radius <input type="range" min="4" max="40" data-v="--radius" data-u="px"></label>
+  <label>Button 3D depth <input type="range" min="0" max="12" data-v="--depth" data-u="px"></label>
+  <label>Font <select id="font"><option value="'Segoe UI',system-ui,sans-serif">Modern</option><option value="Georgia,serif">Elegant serif</option><option value="'Courier New',monospace">Casio mono</option><option value="'Trebuchet MS',sans-serif">Friendly</option></select></label>
+  <label>3D tilt on mouse <input type="checkbox" id="tilt" checked></label>
+  <label>Key click sound <input type="checkbox" id="snd"></label>
+  <div class="row"><button class="btn" id="reset">Reset all</button></div>
+</aside>
 
 <script>
-(() => {
-  "use strict";
-  const $ = s => document.querySelector(s);
-  let expression = "", answer = 0, memory = 0, angle = "DEG", fresh = false;
-  let history = [];
-  try { history = JSON.parse(localStorage.getItem("arc-history") || "[]"); } catch {}
+/* ===== EDIT ME: quick links on the Trending tab ===== */
+const LINKS=[
+ ["▶ YouTube Trending (India)","https://www.youtube.com/feed/trending?gl=IN"],
+ ["🎵 New Bollywood songs","https://www.youtube.com/results?search_query=new+bollywood+songs+2026&sp=CAI%253D"],
+ ["🔥 Trending Hindi songs","https://www.youtube.com/results?search_query=trending+hindi+songs+this+week"],
+ ["T‑Series","https://www.youtube.com/@tseries/videos"],
+ ["Zee Music Company","https://www.youtube.com/@zeemusiccompany/videos"],
+ ["Saregama Music","https://www.youtube.com/@saregama/videos"],
+ ["Sony Music India","https://www.youtube.com/@SonyMusicIndia/videos"],
+ ["Punjabi hits","https://www.youtube.com/results?search_query=new+punjabi+songs&sp=CAI%253D"]
+];
+const PRESETS=[
+ {n:"Aurora",a:"#7c5cff",b:"#00d4ff",bg1:"#0b0720",bg2:"#1b1250",bg3:"#05303f"},
+ {n:"Rose Gold",a:"#ff7eb3",b:"#ffd166",bg1:"#1c0b14",bg2:"#4a1735",bg3:"#3d2a10"},
+ {n:"Emerald",a:"#00e08a",b:"#7dffd4",bg1:"#04140e",bg2:"#0b3a2a",bg3:"#0a2a40"},
+ {n:"Sunset",a:"#ff5f6d",b:"#ffc371",bg1:"#1a0a10",bg2:"#4d1530",bg3:"#40240a"},
+ {n:"Mono Gold",a:"#d4af37",b:"#fff1b8",bg1:"#0a0a0a",bg2:"#2a2412",bg3:"#1a1a1a"}
+];
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)],R=document.documentElement;
 
-  const palettes = {
-    paper: ["#f3f5f4","#ffffff","#226c55","#202823"],
-    night: ["#07090e","#121826","#8aa7ff","#f3f6ff"],
-    citrus: ["#f7f4dc","#fffdf4","#7e8a28","#292d18"],
-    rose: ["#f6eeee","#fffafa","#a54d65","#34252a"]
-  };
-  const themeInputs = [...document.querySelectorAll("[data-theme]")];
+/* ---------- tabs ---------- */
+$$('.tab').forEach(t=>t.onclick=()=>{$$('.tab').forEach(x=>x.setAttribute('aria-selected',x===t));$$('main section').forEach(s=>s.classList.toggle('on',s.id===t.dataset.t))});
 
-  function format(n) {
-    if (!Number.isFinite(n)) throw Error("Result is outside the supported range.");
-    if (Math.abs(n) < 1e-13) return "0";
-    return Number(n.toPrecision(12)).toString();
-  }
+/* ---------- settings ---------- */
+const DEF={'--a':'#7c5cff','--b':'#00d4ff','--bg1':'#0b0720','--bg2':'#1b1250','--bg3':'#05303f','--blur':22,'--glass':.10,'--radius':20,'--depth':6,font:"'Segoe UI',system-ui,sans-serif",tilt:true,snd:false};
+let S={...DEF};try{Object.assign(S,JSON.parse(localStorage.getItem('lumen')||'{}'))}catch(e){}
+function save(){try{localStorage.setItem('lumen',JSON.stringify(S))}catch(e){}}
+function apply(){
+  $$('#set [data-v]').forEach(i=>{const k=i.dataset.v,sc=+i.dataset.s||1,u=i.dataset.u||'';
+    R.style.setProperty(k,i.type==='range'?(S[k]*1)+u:S[k]);i.value=S[k]*sc});
+  R.style.setProperty('--font',S.font);$('#font').value=S.font;$('#tilt').checked=S.tilt;$('#snd').checked=S.snd;
+}
+$$('#set [data-v]').forEach(i=>i.oninput=()=>{const sc=+i.dataset.s||1;S[i.dataset.v]=i.type==='range'?i.value/sc:i.value;apply();save()});
+$('#font').onchange=e=>{S.font=e.target.value;apply();save()};
+$('#tilt').onchange=e=>{S.tilt=e.target.checked;save()};$('#snd').onchange=e=>{S.snd=e.target.checked;save()};
+$('#reset').onclick=()=>{S={...DEF};apply();save()};
+PRESETS.forEach(p=>{const b=document.createElement('button');b.className='sw';b.title=p.n;b.setAttribute('aria-label','Theme '+p.n);
+  b.style.background=`linear-gradient(135deg,${p.a},${p.b})`;
+  b.onclick=()=>{Object.assign(S,{'--a':p.a,'--b':p.b,'--bg1':p.bg1,'--bg2':p.bg2,'--bg3':p.bg3});apply();save()};$('#presets').append(b)});
+$('#gear').onclick=()=>$('#set').classList.add('open');$('#close').onclick=()=>$('#set').classList.remove('open');
+addEventListener('keydown',e=>{if(e.key==='Escape')$('#set').classList.remove('open')});
+apply();
 
-  function tokenize(source) {
-    source = source.replaceAll("×","*").replaceAll("÷","/").replaceAll("−","-");
-    const re = /\s*([0-9]+(?:\.[0-9]*)?(?:e[+-]?[0-9]+)?|\.[0-9]+(?:e[+-]?[0-9]+)?|[A-Za-z]+|π|[()+\-*/^!%])/igy;
-    const tokens = [];
-    let pos = 0;
-    while (pos < source.length) {
-      re.lastIndex = pos;
-      const match = re.exec(source);
-      if (!match) throw Error("Check the expression near “" + source.slice(pos,pos+8) + "”.");
-      tokens.push(match[1]);
-      pos = re.lastIndex;
-    }
-    const ends = t => /^\d/.test(t) || [")","π","e","Ans","!","%"].includes(t);
-    const starts = t => /^\d/.test(t) || ["(","π","e","Ans"].includes(t) || /^(sin|cos|tan|asin|acos|atan|ln|log|sqrt|cbrt)$/i.test(t);
-    const out = [];
-    for (const t of tokens) {
-      if (out.length && ends(out.at(-1)) && starts(t)) out.push("*");
-      out.push(t);
-    }
-    return out;
-  }
+/* ---------- 3D tilt ---------- */
+const stage=$('#stage'),body=$('#calcBody');
+stage.addEventListener('pointermove',e=>{if(!S.tilt||e.pointerType==='touch')return;const r=body.getBoundingClientRect();
+  const x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;body.style.transform=`rotateY(${x*12}deg) rotateX(${-y*12}deg)`});
+stage.addEventListener('pointerleave',()=>body.style.transform='');
 
-  function evaluate(source) {
-    const t = tokenize(source);
-    let i = 0;
-    const peek = () => t[i], take = () => t[i++];
-    const need = ch => { if (take() !== ch) throw Error("Check your parentheses."); };
+/* ---------- calculator engine (no eval) ---------- */
+let deg=true,shift=false,ans=0,expr='',justEq=false;
+const F={sin:x=>Math.sin(deg?x*Math.PI/180:x),cos:x=>Math.cos(deg?x*Math.PI/180:x),tan:x=>Math.tan(deg?x*Math.PI/180:x),
+ asin:x=>Math.asin(x)*(deg?180/Math.PI:1),acos:x=>Math.acos(x)*(deg?180/Math.PI:1),atan:x=>Math.atan(x)*(deg?180/Math.PI:1),
+ sinh:Math.sinh,cosh:Math.cosh,tanh:Math.tanh,log:Math.log10,ln:Math.log,'√':Math.sqrt,'∛':Math.cbrt,abs:Math.abs,exp10:x=>10**x,exp:Math.exp};
+const fact=n=>{if(n<0||n%1)throw 0;if(n>170)return Infinity;let r=1;for(let i=2;i<=n;i++)r*=i;return r};
+function parse(src){
+  const t=src.replace(/Ans/g,'A').match(/\d*\.?\d+(?:E[+-]?\d+)?|[A-Za-z√∛]+|[^\s]/g)||[];let p=0;
+  const pk=()=>t[p],nx=()=>t[p++];
+  function expr(){let v=term();while(pk()==='+'||pk()==='−'||pk()==='-'){v=nx()==='+'?v+term():v-term()}return v}
+  function term(){let v=un();for(;;){const k=pk();
+    if(k==='×'||k==='*'){nx();v*=un()}else if(k==='÷'||k==='/'){nx();v/=un()}
+    else if(k==='P'){nx();const r=un();v=fact(v)/fact(v-r)}else if(k==='C'){nx();const r=un();v=fact(v)/(fact(r)*fact(v-r))}
+    else if(k!==undefined&&k!==')'&&k!=='+'&&k!=='−'&&k!=='-'&&k!=='^'&&k!=='!'&&k!=='%'&&k!=='²'&&k!=='⁻¹')v*=un();else return v}}
+  function un(){if(pk()==='−'||pk()==='-'){nx();return -un()}if(pk()==='+'){nx();return un()}return pw()}
+  function pw(){let b=post();if(pk()==='^'){nx();return b**un()}return b}
+  function post(){let v=prim();for(;;){const k=pk();if(k==='!'){nx();v=fact(v)}else if(k==='%'){nx();v/=100}else if(k==='²'){nx();v*=v}else if(k==='⁻¹'){nx();v=1/v}else return v}}
+  function prim(){const k=nx();if(k===undefined)throw 0;
+    if(/^[\d.]/.test(k))return parseFloat(k);
+    if(k==='('){const v=expr();if(pk()===')')nx();return v}
+    if(k==='π')return Math.PI;if(k==='e')return Math.E;if(k==='A')return ans;
+    if(F[k]){if(nx()!=='(')throw 0;const v=expr();if(pk()===')')nx();return F[k](v)}
+    throw 0}
+  const v=expr();if(p<t.length)throw 0;return v}
+const fmt=v=>{if(!isFinite(v))return v>0?'∞':v<0?'−∞':'Math ERROR';let s=parseFloat(v.toPrecision(12));
+  return Math.abs(s)>=1e12||(Math.abs(s)<1e-9&&s!==0)?s.toExponential(6).replace(/\.?0+e/,'E').replace('e','E'):String(s).replace('-','−')};
+/* [label, shiftLabel, insert, shiftInsert, class] — mirrors the fx‑991CW layout */
+const KEYS=[
+ ['SHIFT','','shift','','fn'],['DEG','RAD','mode','','fn'],['x²','√','²','√(','fn'],['xʸ','ʸ√','^','^(1÷','fn'],['log','10ˣ','log(','exp10(','fn'],['ln','eˣ','ln(','exp(','fn'],
+ ['sin','sin⁻¹','sin(','asin(','fn'],['cos','cos⁻¹','cos(','acos(','fn'],['tan','tan⁻¹','tan(','atan(','fn'],['(','nPr','(','P','fn'],[')','nCr',')','C','fn'],['x⁻¹','x!','⁻¹','!','fn'],
+ ['π','e','π','e','fn'],['sinh','∛','sinh(','∛(','fn'],['cosh','abs','cosh(','abs(','fn'],['tanh','%','tanh(','%','fn'],['Ans','','Ans','','fn'],['EXP','','E','','fn'],
+ ['7','','7','','n'],['8','','8','','n'],['9','','9','','n'],['DEL','','del','','ac'],['AC','','ac','','ac'],['','','','','sp'],
+ ['4','','4','','n'],['5','','5','','n'],['6','','6','','n'],['×','','×','','op'],['÷','','÷','','op'],['','','','','sp'],
+ ['1','','1','','n'],['2','','2','','n'],['3','','3','','n'],['+','','+','','op'],['−','','−','','op'],['','','','','sp'],
+ ['0','','0','','n'],['.','','.','','n'],['(−)','','−','','n'],['Ans','','Ans','','n'],['=','','eq','','eq']
+];
+const keysEl=$('#keys');
+KEYS.forEach(([l,s,i,si,c],idx)=>{if(c==='sp'){keysEl.append(document.createElement('span'));return}const b=document.createElement('button');b.className='k '+c;b.dataset.i=idx;
+  b.innerHTML=(s?`<small>${s}</small>`:'')+l;b.setAttribute('aria-label',l);if(l==='=')b.style.gridColumn='span 2';keysEl.append(b)});
+/* last row has 5 keys in 6 cols; widen = */
+function press(idx){const [l,s,i,si]=KEYS[idx];const v=shift&&si?si:i;
+  if(snd)beep();
+  if(v==='shift'){shift=!shift;upd();return}
+  if(v==='mode'){deg=!deg;upd();return}
+  if(shift&&si)shift=false;
+  if(v==='ac'){expr='';$('#res').textContent='0';justEq=false;upd();return}
+  if(v==='del'){expr=expr.replace(/(Ans|[a-z0-9]+\(|.)$/i,'');upd();return}
+  if(v==='eq'){if(!expr)return;try{const r=parse(expr);addHist(expr,fmt(r));ans=r;$('#res').textContent=fmt(r);justEq=true}catch(e){$('#res').textContent='Syntax ERROR'}upd(true);return}
+  if(justEq){if(/^[+−×÷^]/.test(v)||v==='²'||v==='⁻¹'||v==='!')expr='Ans';else expr='';justEq=false}
+  expr+=v;upd();livePreview()}
+let snd=false;function beep(){try{const c=beep.c||(beep.c=new (window.AudioContext||window.webkitAudioContext)()),o=c.createOscillator(),g=c.createGain();o.frequency.value=620;g.gain.value=.05;o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+.04)}catch(e){}}
+function upd(){snd=S.snd;$('#expr').textContent=expr;$('#sh').textContent=shift?'SHIFT':'';$('#mode').textContent=deg?'DEG':'RAD';
+  $$('#keys .k').forEach(b=>{const k=KEYS[b.dataset.i];const v=k[2];
+    if(v==='shift')b.classList.toggle('on',shift);
+    if(shift&&k[3]&&k[2]!=='shift'){b.firstChild&&0}
+    if(v==='mode')b.innerHTML=(deg?'<small>RAD</small>DEG':'<small>DEG</small>RAD')})}
+function livePreview(){try{$('#res').textContent=fmt(parse(expr))}catch(e){}}
+keysEl.addEventListener('click',e=>{const b=e.target.closest('.k');if(b)press(+b.dataset.i)});
+/* keyboard support */
+addEventListener('keydown',e=>{if(!$('#calc').classList.contains('on')||/INPUT|SELECT/.test(e.target.tagName))return;
+  const m={'*':'×','/':'÷','-':'−','+':'+','.':'.','(':'(',')':')','^':'^','!':'!','%':'%'};let v=null;
+  if(/^\d$/.test(e.key))v=e.key;else if(m[e.key])v=m[e.key];
+  if(v!==null){justEq&&/^\d|\(/.test(v)&&(expr='',justEq=false);if(justEq){expr='Ans';justEq=false}expr+=v;upd();livePreview();e.preventDefault()}
+  else if(e.key==='Enter'||e.key==='='){press(KEYS.findIndex(k=>k[2]==='eq'));e.preventDefault()}
+  else if(e.key==='Backspace')press(KEYS.findIndex(k=>k[2]==='del'));
+  else if(e.key==='Escape')press(KEYS.findIndex(k=>k[2]==='ac'))});
+function addHist(e,r){const h=$('#hist');const d=document.createElement('div');d.innerHTML=`<span>${e}</span><span>${r}</span>`;
+  d.onclick=()=>{expr=e;upd();livePreview()};h.insertBefore(d,h.children[1]);while(h.children.length>16)h.lastChild.remove()}
+/* shift label hint: swap visible labels while shift is on */
+const _u=upd;upd=function(a){_u(a);$$('#keys .k').forEach(b=>{const k=KEYS[b.dataset.i];if(k[2]==='mode'||k[2]==='shift'||!k[1]||!k[3])return;
+  b.style.color=shift?'var(--b)':''})};
+upd();
 
-    function add() {
-      let x = multiply();
-      while (peek() === "+" || peek() === "-") {
-        const op = take(), y = multiply();
-        x = op === "+" ? x + y : x - y;
-      }
-      return x;
-    }
-    function multiply() {
-      let x = unary();
-      while (peek() === "*" || peek() === "/") {
-        const op = take(), y = unary();
-        if (op === "/" && y === 0) throw Error("Cannot divide by zero.");
-        x = op === "*" ? x * y : x / y;
-      }
-      return x;
-    }
-    function unary() {
-      if (peek() === "+") { take(); return unary(); }
-      if (peek() === "-") { take(); return -unary(); }
-      return power();
-    }
-    function power() {
-      let x = postfix();
-      if (peek() === "^") { take(); x = Math.pow(x, unary()); }
-      return x;
-    }
-    function postfix() {
-      let x = primary();
-      while (peek() === "!" || peek() === "%") {
-        const op = take();
-        if (op === "!") {
-          if (x < 0 || x > 170 || !Number.isInteger(x))
-            throw Error("Factorial needs a whole number from 0 to 170.");
-          let f = 1;
-          for (let n = 2; n <= x; n++) f *= n;
-          x = f;
-        } else x /= 100;
-      }
-      return x;
-    }
-    function primary() {
-      const a = take();
-      if (a === undefined) throw Error("Enter a calculation first.");
-      if (a === "(") { const x = add(); need(")"); return x; }
-      if (/^\d/.test(a) || /^\.\d/.test(a)) return Number(a);
-      if (a === "π") return Math.PI;
-      if (a.toLowerCase() === "e") return Math.E;
-      if (a.toLowerCase() === "ans") return answer;
+/* ---------- Tic‑Tac‑Toe with minimax ---------- */
+let tb,tOver;const WL=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+const win=b=>{for(const [x,y,z] of WL)if(b[x]&&b[x]===b[y]&&b[x]===b[z])return b[x];return b.includes('')?null:'T'};
+function mm(b,me){const w=win(b);if(w==='O')return 1;if(w==='X')return -1;if(w==='T')return 0;
+  let best=me==='O'?-9:9;b.forEach((c,i)=>{if(!c){b[i]=me;const s=mm(b,me==='O'?'X':'O');b[i]='';best=me==='O'?Math.max(best,s):Math.min(best,s)}});return best}
+function tttDraw(){const el=$('#ttt');el.innerHTML='';tb.forEach((c,i)=>{const b=document.createElement('button');b.className='cell';b.textContent=c;b.setAttribute('aria-label','Cell '+(i+1)+' '+(c||'empty'));
+  b.onclick=()=>{if(tOver||tb[i])return;tb[i]='X';let w=win(tb);if(!w){let bi=-1,bs=-9;tb.forEach((c,j)=>{if(!c){tb[j]='O';const s=mm(tb,'X');tb[j]='';if(s>bs||(s===bs&&Math.random()<.3)){bs=s;bi=j}}});
+      if(Math.random()<.2){const e=tb.map((c,j)=>c?-1:j).filter(j=>j>=0);bi=e[Math.floor(Math.random()*e.length)]}tb[bi]='O';w=win(tb)}
+    if(w){tOver=true;$('#tttMsg').textContent=w==='T'?"It's a draw!":w==='X'?'You win! 🎉':'AI wins'}tttDraw()};el.append(b)})}
+function tttNew(){tb=Array(9).fill('');tOver=false;$('#tttMsg').textContent='Your move (X)';tttDraw()}
+$('#tttReset').onclick=tttNew;tttNew();
 
-      const fn = a.toLowerCase();
-      if (/^(sin|cos|tan|asin|acos|atan|ln|log|sqrt|cbrt)$/.test(fn)) {
-        let x;
-        if (peek() === "(") { take(); x = add(); need(")"); }
-        else x = primary();
-        const toRad = v => angle === "DEG" ? v * Math.PI / 180 : v;
-        const fromRad = v => angle === "DEG" ? v * 180 / Math.PI : v;
-        switch (fn) {
-          case "sin": return Math.sin(toRad(x));
-          case "cos": return Math.cos(toRad(x));
-          case "tan":
-            if (Math.abs(Math.cos(toRad(x))) < 1e-14) throw Error("Tangent is undefined at this angle.");
-            return Math.tan(toRad(x));
-          case "asin":
-            if (Math.abs(x) > 1) throw Error("Inverse sine needs a value from −1 to 1.");
-            return fromRad(Math.asin(x));
-          case "acos":
-            if (Math.abs(x) > 1) throw Error("Inverse cosine needs a value from −1 to 1.");
-            return fromRad(Math.acos(x));
-          case "atan": return fromRad(Math.atan(x));
-          case "ln":
-            if (x <= 0) throw Error("Natural log needs a positive value.");
-            return Math.log(x);
-          case "log":
-            if (x <= 0) throw Error("Log needs a positive value.");
-            return Math.log10(x);
-          case "sqrt":
-            if (x < 0) throw Error("Square root needs a non-negative value.");
-            return Math.sqrt(x);
-          case "cbrt": return Math.cbrt(x);
-        }
-      }
-      throw Error("Unexpected “" + a + "”. Check the expression.");
-    }
+/* ---------- Memory match ---------- */
+let mc=[],mf=[],mm_=0;const EM=['★','♥','♦','♣','☀','☾','⚡','✿'];
+function memNew(){mc=[...EM,...EM].sort(()=>Math.random()-.5).map(v=>({v,s:0}));mf=[];mm_=0;memDraw()}
+function memDraw(){const el=$('#mem');el.innerHTML='';mc.forEach((c,i)=>{const b=document.createElement('button');b.className='cell'+(c.s===1?' flip':c.s===2?' done':'');
+  b.textContent=c.s?c.v:'?';b.setAttribute('aria-label',c.s?c.v:'hidden card');b.style.fontSize='1.5rem';
+  b.onclick=()=>{if(c.s||mf.length===2)return;c.s=1;mf.push(i);memDraw();
+    if(mf.length===2){mm_++;const [x,y]=mf;setTimeout(()=>{if(mc[x].v===mc[y].v)mc[x].s=mc[y].s=2;else mc[x].s=mc[y].s=0;mf=[];memDraw();
+      $('#memMsg').textContent=mc.every(c=>c.s===2)?`Solved in ${mm_} moves! 🎉`:`Moves: ${mm_}`},600)}};el.append(b)})}
+$('#memReset').onclick=memNew;memNew();
 
-    const value = add();
-    if (i < t.length) throw Error("Check the expression near “" + t[i] + "”.");
-    if (!Number.isFinite(value)) throw Error("Result is outside the supported range.");
-    return value;
-  }
+/* ---------- Guess number ---------- */
+let gn,gc;function gNew(){gn=1+Math.floor(Math.random()*100);gc=0;$('#gMsg').textContent="I'm thinking of a number…";$('#gIn').value=''}
+$('#gBtn').onclick=()=>{const v=+$('#gIn').value;if(!v)return;gc++;$('#gMsg').textContent=v===gn?`Correct in ${gc} tries! 🎉`:v<gn?'Higher ↑':'Lower ↓'};$('#gReset').onclick=gNew;gNew();
 
-  function render() {
-    $("#expression").textContent = expression;
-    $("#result").textContent = format(answer);
-    $("#modeLabel").textContent = angle;
-    $("#memoryMark").textContent = memory ? "M" : "M ·";
-    $("#deg").classList.toggle("active", angle === "DEG");
-    $("#rad").classList.toggle("active", angle === "RAD");
-    $("#deg").setAttribute("aria-pressed", angle === "DEG");
-    $("#rad").setAttribute("aria-pressed", angle === "RAD");
-  }
+/* ---------- Math sprint ---------- */
+let qa,qs=0,qt,qi;
+function qNext(){const a=2+Math.floor(Math.random()*12),b=2+Math.floor(Math.random()*12),o=['+','−','×'][Math.floor(Math.random()*3)];
+  qa=o==='+'?a+b:o==='−'?a-b:a*b;$('#qQ').textContent=`${a} ${o} ${b}`;$('#qIn').value='';$('#qIn').focus()}
+$('#qGo').onclick=()=>{qs=0;qt=30;qNext();clearInterval(qi);qi=setInterval(()=>{qt--;$('#qMsg').textContent=`Score ${qs} · ${qt}s left`;if(qt<=0){clearInterval(qi);qa=null;$('#qQ').textContent='–';$('#qMsg').textContent=`Time! Final score: ${qs}`}},1000)};
+$('#qIn').onkeydown=e=>{if(e.key==='Enter'&&qa!==null&&qt>0){if(+e.target.value===qa)qs++;qNext()}};
 
-  function insert(value) {
-    $("#error").textContent = "";
-    if (fresh && !["+","-","−","*","×","/","÷","^","!","%"].includes(value)) expression = "";
-    fresh = false;
-    expression += value;
-    $("#expression").textContent = expression;
-  }
-
-  function escapeHtml(s) {
-    return s.replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-  }
-
-  function renderHistory() {
-    const box = $("#history");
-    if (!history.length) {
-      box.innerHTML = '<div class="empty">Your calculations<br>will land here.</div>';
-      return;
-    }
-    box.innerHTML = history.map((item,n) =>
-      '<button class="history-item" data-history="'+n+'"><span>'+escapeHtml(item.expression)+'</span><b>'+escapeHtml(item.result)+' ↗</b></button>'
-    ).join("");
-  }
-
-  function calculate() {
-    if (!expression.trim()) return;
-    try {
-      const original = expression;
-      answer = evaluate(original);
-      $("#result").textContent = format(answer);
-      $("#error").textContent = "";
-      history.unshift({expression:original,result:format(answer)});
-      history = history.slice(0,8);
-      localStorage.setItem("arc-history",JSON.stringify(history));
-      renderHistory();
-      expression = format(answer);
-      fresh = true;
-    } catch (error) {
-      $("#error").textContent = error.message;
-    }
-  }
-
-  $("#keys").addEventListener("click", event => {
-    const b = event.target.closest("button");
-    if (!b) return;
-    if (b.dataset.insert !== undefined) { insert(b.dataset.insert); return; }
-    if (b.dataset.action === "calculate") calculate();
-    if (b.dataset.action === "back") { expression = expression.slice(0,-1); fresh = false; render(); }
-    if (b.dataset.action === "clear") {
-      expression = ""; answer = 0; fresh = false;
-      $("#error").textContent = ""; $("#result").textContent = "0"; render();
-    }
-  });
-
-  document.querySelector(".memory").addEventListener("click", event => {
-    const a = event.target.dataset.action;
-    if (!a) return;
-    if (a === "ans") insert("Ans");
-    if (a === "mc") { memory = 0; render(); }
-    if (a === "mr") insert(format(memory));
-    if (a === "mplus" || a === "mminus") {
-      try { const n = expression ? evaluate(expression) : answer; memory += a === "mplus" ? n : -n; render(); }
-      catch (error) { $("#error").textContent = error.message; }
-    }
-  });
-
-  $("#deg").onclick = () => { angle = "DEG"; render(); };
-  $("#rad").onclick = () => { angle = "RAD"; render(); };
-  $("#goHistory").onclick = () => $("#historyPanel").scrollIntoView({behavior:"smooth"});
-  $("#clearHistory").onclick = () => { history = []; localStorage.removeItem("arc-history"); renderHistory(); };
-  $("#history").addEventListener("click", event => {
-    const b = event.target.closest("[data-history]");
-    if (b) { expression = history[Number(b.dataset.history)].expression; fresh = false; render(); }
-  });
-
-  document.addEventListener("keydown", event => {
-    if (event.ctrlKey || event.metaKey || event.altKey) return;
-    if (event.key === "Enter" || event.key === "=") { event.preventDefault(); calculate(); }
-    else if (event.key === "Escape") {
-      expression = ""; answer = 0; fresh = false;
-      $("#error").textContent = ""; $("#result").textContent = "0"; render();
-    } else if (event.key === "Backspace") {
-      expression = expression.slice(0,-1); fresh = false; render();
-    } else if (/^[0-9.+\-*/^()%!]$/.test(event.key) || event.key === "(" || event.key === ")") insert(event.key);
-    else if (/^[a-zA-Z]$/.test(event.key)) insert(event.key);
-  });
-
-  themeInputs.forEach(input => {
-    const saved = localStorage.getItem("arc-" + input.dataset.theme);
-    if (saved) input.value = saved;
-    document.documentElement.style.setProperty(input.dataset.theme,input.value);
-    input.addEventListener("input",() => {
-      document.documentElement.style.setProperty(input.dataset.theme,input.value);
-      localStorage.setItem("arc-" + input.dataset.theme,input.value);
-    });
-  });
-
-  const font = $("#font");
-  font.value = localStorage.getItem("arc-font") || "'Plus Jakarta Sans',sans-serif";
-  document.documentElement.style.setProperty("--font",font.value);
-  font.onchange = () => {
-    document.documentElement.style.setProperty("--font",font.value);
-    localStorage.setItem("arc-font",font.value);
-  };
-
-  document.querySelectorAll("[data-preset]").forEach(button => {
-    button.onclick = () => palettes[button.dataset.preset].forEach((color,i) => {
-      themeInputs[i].value = color;
-      themeInputs[i].dispatchEvent(new Event("input"));
-    });
-  });
-
-  $("#reset").onclick = () => {
-    themeInputs.forEach(input => localStorage.removeItem("arc-" + input.dataset.theme));
-    localStorage.removeItem("arc-font");
-    font.value = "'Plus Jakarta Sans',sans-serif";
-    font.dispatchEvent(new Event("change"));
-    palettes.night.forEach((color,i) => {
-      themeInputs[i].value = color;
-      themeInputs[i].dispatchEvent(new Event("input"));
-    });
-  };
-
-  const glow = $("#glow");
-  window.addEventListener("pointermove",event => {
-    glow.style.left = event.clientX + "px";
-    glow.style.top = event.clientY + "px";
-  },{passive:true});
-
-  render();
-  renderHistory();
-})();
+/* ---------- Trending ---------- */
+LINKS.forEach(([t,u])=>{const a=document.createElement('a');a.textContent=t;a.href=u;a.target='_blank';a.rel='noopener';$('#chips').append(a)});
+try{$('#ytKey').value=localStorage.getItem('ytk')||''}catch(e){}
+$('#ytGo').onclick=async()=>{const k=$('#ytKey').value.trim(),c=$('#ytCat').value,m=$('#ytMsg'),box=$('#vids');
+  if(!k){m.textContent='Enter an API key first (Google Cloud Console → YouTube Data API v3).';return}
+  try{localStorage.setItem('ytk',k)}catch(e){}m.textContent='Loading…';box.innerHTML='';
+  try{const r=await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet&chart=mostPopular&regionCode=IN&maxResults=24${c?'&videoCategoryId='+c:''}&key=${encodeURIComponent(k)}`);
+    const d=await r.json();if(d.error)throw new Error(d.error.message);m.textContent='';
+    d.items.forEach(v=>{const a=document.createElement('a');a.className='vid';a.href='https://www.youtube.com/watch?v='+v.id;a.target='_blank';a.rel='noopener';
+      const im=document.createElement('img');im.src=v.snippet.thumbnails.medium.url;im.alt='';im.loading='lazy';
+      const dv=document.createElement('div');dv.textContent=v.snippet.title;const em=document.createElement('em');em.textContent=v.snippet.channelTitle;dv.append(em);a.append(im,dv);box.append(a)})
+  }catch(e){m.textContent='Could not load: '+e.message}};
 </script>
 </body>
 </html>
